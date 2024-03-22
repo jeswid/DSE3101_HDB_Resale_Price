@@ -49,13 +49,13 @@ data1_2_3 <- rbind(data1, data2, data3) %>%mutate(date = ym(month))%>%
   select(-date) %>%
   mutate(resale_price_new = resale_price) %>%
   select(-resale_price) %>%
-  rename(resale_price = resale_price_new)
+  mutate(resale_price = resale_price_new) %>%
+  select(-resale_price_new)
 
-
-data_original <- rbind.fill(data1, data2, data3, data4, data5)
+data_complete <- rbind.fill(data1_2_3, data4, data5)
 
 #create separate year and month columns
-data_transformed <- data_original %>% mutate(date = ym(month)) %>%
+data_tidy <- data_complete %>% mutate(date = ym(month)) %>%
   separate(month, c("year", "month"), sep = "-")
 
 
@@ -64,6 +64,7 @@ data_transformed <- data_original %>% mutate(date = ym(month)) %>%
 convert_to_binary <- function(data, column_name) {
   # Get unique values in the specified column
   unique_values <- unique(data[[column_name]])
+  unique_values <- unique_values[-1]
   
   # Create new columns for each unique value and populate with binary values
   for (value in unique_values) {
@@ -82,3 +83,7 @@ convert_to_binary <- function(data, column_name) {
 data_binary_town <- convert_to_binary(data_tidy, "town")
 data_binary_town_flat <- convert_to_binary(data_binary_town, "flat_type")
 data_binary_town_flat_month <- convert_to_binary(data_binary_town, "month")
+data_binary_town_flat_month_street_name <- convert_to_binary(data_binary_town, "street_name")
+data_binary_town_flat_month_street_name_flatmodel <- convert_to_binary(data_binary_town, "flat_model")
+data_binary_town_flat_month_street_name_flatmodel_flattype <- convert_to_binary(data_binary_town, "flat_type")
+data_binary_town_flat_month_street_name_flatmodel_flattype_storeyrange <- convert_to_binary(data_binary_town, "storey_range")
