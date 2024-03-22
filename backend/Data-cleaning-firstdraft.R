@@ -1,4 +1,4 @@
-#firstly, load all the required packages
+# firstly, load all the required packages
 library(tidyverse)
 library(dplyr)
 library(plotly)
@@ -10,14 +10,14 @@ library(caret)
 library(httr) 
 library(jsonlite)
 
-#read the HDB resale data from 1990 - 2024 into R
-data1 <- read.csv("ResaleFlatPricesBasedonApprovalDate19901999.csv")
-data2 <- read.csv("ResaleFlatPricesBasedonApprovalDate2000Feb2012.csv")
-data3 <- read.csv("ResaleFlatPricesBasedonRegistrationDateFromMar2012toDec2014.csv")
-data4 <- read.csv("ResaleFlatPricesBasedonRegistrationDateFromJan2015toDec2016.csv")
-data5 <- read.csv("ResaleflatpricesbasedonregistrationdatefromJan2017onwards.csv")
+# read the HDB resale data from 1990 - 2024 into R
+data1 <- read.csv("backend/ResaleFlatPricesBasedonApprovalDate19901999.csv")
+data2 <- read.csv("backend/ResaleFlatPricesBasedonApprovalDate2000Feb2012.csv")
+data3 <- read.csv("backend/ResaleFlatPricesBasedonRegistrationDateFromMar2012toDec2014.csv")
+data4 <- read.csv("backend/ResaleFlatPricesBasedonRegistrationDateFromJan2015toDec2016.csv")
+data5 <- read.csv("backend/ResaleflatpricesbasedonregistrationdatefromJan2017onwards.csv")
 
-# Convert the remaining lease from "years and months" into numver of years in decimal places
+# Convert the remaining lease from "years and months" into number of years in decimal places
 convert_remaining_lease <- function(data) {
   # Extract years and months using regular expressions
   years <- as.numeric(gsub(".*?(\\d+) year.*", "\\1", data$remaining_lease))
@@ -59,29 +59,75 @@ data_tidy <- data_complete %>%
 # Check for any NA values in our merged dataframe
 sum(is.na(data_tidy))
 
+##########################################################################################
+# Getting the latitude and longitude of each unique address 
+# geo_code <- function(address) {
+#   lat <- 1.3245
+#   lon <- 103.8572
+#   tryCatch({
+#     address = str_replace_all(address," ","%20") 
+#     base_url <- "https://www.onemap.gov.sg/api/common/elastic/search?searchVal="
+#     endpoint <- "&returnGeom=Y&getAddrDetails=Y"
+#     resource_url <- paste0(base_url,address,endpoint)
+#     res <- GET(resource_url, 
+#                add_headers(Authorization = paste("Bearer", Sys.getenv("ONEMAP_KEY"))),
+#                accept("application/json"))
+#     res_list <- content(res, type = "text") %>% fromJSON(flatten = TRUE)
+#     df <- as_tibble(res_list$results)[1,]
+#     lat <- as.numeric(df["LATITUDE"])
+#     lon <- as.numeric(df["LONGITUDE"])
+#   }, error = function(e) {
+#     lat <- 1.3245
+#     lon <- 103.8572
+#   })
+#   return(c(lat, lon))
+# }
+# 
+# data_tidy <- data_tidy %>%
+#   mutate(address = paste(block, street_name, sep = ' '))
+# 
+# unique_addresses <- unique(data_tidy$address)
+# 
+# lat_long <- data.frame(
+#   address = character(),
+#   lat = numeric(),
+#   long = numeric(),
+#   stringsAsFactors = FALSE # Prevent conversion of character to factor
+# )
+# 
+# # Now, let's iterate through the data and add rows to the data frame
+# for (address in unique_addresses) {
+#   coords <- geo_code(address)
+#   row <- data.frame(address = address, lat = coords[1], long = coords[2], stringsAsFactors = FALSE)
+#   lat_long <- bind_rows(lat_long, row)
+# }
+# 
+# write.csv(lat_long, "backend/lat_long.csv")
+
+##########################################################################################
+# Test Example of API
 # Construct the API request URL 
-base_url <- "https://www.onemap.gov.sg/api/common/elastic/search?searchVal="
-endpoint <- "&returnGeom=Y&getAddrDetails=N&pageNum=1"
-resource_url <- paste0(base_url,200640,endpoint)
-# Make the GET request with the access token in the header
-res <- GET(resource_url, 
-           add_headers(Authorization = paste("Bearer", Sys.getenv("ONEMAP_KEY"))),
-           accept("application/json"))
-
-# Check the status code
-res$status_code
-
-# Parse the response content
-res_list <- content(res, type = "text") %>%
-  fromJSON(flatten = TRUE)
-
-# Convert response to tibble
-df <- as_tibble(res_list$results)
-
-# View the data
-df
-
-########################################################################################## 
+# base_url <- "https://www.onemap.gov.sg/api/common/elastic/search?searchVal="
+# endpoint <- "&returnGeom=Y&getAddrDetails=Y"
+# resource_url <- paste0(base_url,"406%20ANG%20MO%20KIO%20AVE%2010",endpoint)
+# # Make the GET request with the access token in the header
+# res <- GET(resource_url, 
+#            add_headers(Authorization = paste("Bearer", Sys.getenv("ONEMAP_KEY"))),
+#            accept("application/json"))
+# 
+# # Check the status code
+# res$status_code
+# 
+# # Parse the response content
+# res_list <- content(res, type = "text") %>%
+#   fromJSON(flatten = TRUE)
+# 
+# # Convert response to tibble
+# df <- as_tibble(res_list$results)
+# 
+# # View the data
+# df
+##########################################################################################
 
 #function for n - 1 binary regressors form 
 # (Convert n categorical variables to (n-1) dummy variables)
