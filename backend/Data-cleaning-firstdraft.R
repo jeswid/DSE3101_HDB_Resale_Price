@@ -7,6 +7,8 @@ library(stringr)
 library(readxl)
 library(plyr)
 library(caret)
+library(httr) 
+library(jsonlite)
 
 #read the HDB resale data from 1990 - 2024 into R
 data1 <- read.csv("ResaleFlatPricesBasedonApprovalDate19901999.csv")
@@ -50,12 +52,36 @@ data1_2_3 <- rbind(data1, data2, data3) %>%mutate(date = ym(month))%>%
 
 data_complete <- rbind.fill(data1_2_3, data4, data5) 
 
-# Check for any NA values in our merged dataframe
-sum(is.na(data_complete))
-
 #create separate year and month columns to create date dummy variables
-data_tidy <- data_complete %>% mutate(date = ym(month)) %>%
+data_tidy <- data_complete %>%
   separate(month, c("year", "month"), sep = "-")
+
+# Check for any NA values in our merged dataframe
+sum(is.na(data_tidy))
+
+# Construct the API request URL 
+base_url <- "https://www.onemap.gov.sg/api/common/elastic/search?searchVal="
+endpoint <- "&returnGeom=Y&getAddrDetails=N&pageNum=1"
+resource_url <- paste0(base_url,200640,endpoint)
+# Make the GET request with the access token in the header
+res <- GET(resource_url, 
+           add_headers(Authorization = paste("Bearer", Sys.getenv("ONEMAP_KEY"))),
+           accept("application/json"))
+
+# Check the status code
+res$status_code
+
+# Parse the response content
+res_list <- content(res, type = "text") %>%
+  fromJSON(flatten = TRUE)
+
+# Convert response to tibble
+df <- as_tibble(res_list$results)
+
+# View the data
+df
+
+########################################################################################## 
 
 #function for n - 1 binary regressors form 
 # (Convert n categorical variables to (n-1) dummy variables)
