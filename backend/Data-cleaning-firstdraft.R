@@ -61,27 +61,36 @@ sum(is.na(data_tidy))
 
 
 ##########################################################################################
-# Getting the latitude and longitude of each unique address 
+#Getting the latitude and longitude of each unique address
 # geo_code <- function(address) {
-#   lat <- 1.3245
-#   lon <- 103.8572
+#   lat <- 1.2996418818103135
+#   lon <- 103.80010216304007
+#   x <- 24303.3101027
+#   y <- 31333.3389857
+#   postal <- 148812
 #   tryCatch({
-#     address = str_replace_all(address," ","%20") 
+#     address = str_replace_all(address," ","%20")
 #     base_url <- "https://www.onemap.gov.sg/api/common/elastic/search?searchVal="
 #     endpoint <- "&returnGeom=Y&getAddrDetails=Y"
 #     resource_url <- paste0(base_url,address,endpoint)
-#     res <- GET(resource_url, 
+#     res <- GET(resource_url,
 #                add_headers(Authorization = paste("Bearer", Sys.getenv("ONEMAP_KEY"))),
 #                accept("application/json"))
 #     res_list <- content(res, type = "text") %>% fromJSON(flatten = TRUE)
 #     df <- as_tibble(res_list$results)[1,]
 #     lat <- as.numeric(df["LATITUDE"])
 #     lon <- as.numeric(df["LONGITUDE"])
+#     x <- as.numeric(df["X"])
+#     y <- as.numeric(df["Y"])
+#     postal <- as.numeric(df["POSTAL"])
 #   }, error = function(e) {
-#     lat <- 1.3245
-#     lon <- 103.8572
+#     lat <- 1.2996418818103135
+#     lon <- 103.80010216304007
+#     x <- 24303.3101027
+#     y <- 31333.3389857
+#     postal <- 148812
 #   })
-#   return(c(lat, lon))
+#   return(c(lat, lon, x, y, postal))
 # }
 # 
 # data_tidy <- data_tidy %>%
@@ -89,21 +98,24 @@ sum(is.na(data_tidy))
 # 
 # unique_addresses <- unique(data_tidy$address)
 # 
-# lat_long <- data.frame(
+# lat_long_postal_xy <- data.frame(
 #   address = character(),
 #   lat = numeric(),
 #   long = numeric(),
+#   postal = numeric(),
+#   x = numeric(),
+#   y = numeric(),
 #   stringsAsFactors = FALSE # Prevent conversion of character to factor
 # )
 # 
 # # Now, let's iterate through the data and add rows to the data frame
 # for (address in unique_addresses) {
 #   coords <- geo_code(address)
-#   row <- data.frame(address = address, lat = coords[1], long = coords[2], stringsAsFactors = FALSE)
-#   lat_long <- bind_rows(lat_long, row)
+#   row <- data.frame(address = address, lat = coords[1], long = coords[2], postal = coords[5], x = coords[3], y = coords[4], stringsAsFactors = FALSE)
+#   lat_long_postal_xy <- bind_rows(lat_long_postal_xy, row)
 # }
 # 
-# write.csv(lat_long, "backend/lat_long.csv")
+# write.csv(lat_long_postal_xy, "lat_long_postal_xy.csv")
 
 ##########################################################################################
 # Test Example of API
@@ -162,13 +174,17 @@ data_complete <- data_binary
 
 
 ########################################################################################################
-
+#forming the complete data + lat_long table
 #read in the lat long table we created
 data_tidy <- data_tidy %>% 
   mutate(address = paste(block, street_name, sep = " "))
 
-lat_long = read.csv("lat_long.csv") %>% select(-X)
+lat_long_postal_xy = read.csv("lat_long_postal_xy.csv") %>% select(-1)
 
-data_latlong_merged <- data_tidy %>%
-  left_join(lat_long, by = "address")
+data_merged <- data_tidy %>%
+  left_join(lat_long_postal_xy, by = "address")
+
+########################################################################################################
+
+
 
