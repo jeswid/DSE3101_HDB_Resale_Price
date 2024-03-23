@@ -74,13 +74,21 @@ supermarkets_geocode = get_lat_long_postal_xy(supermarkets$postal_code)
 hawker_centers = read.csv("backend/ListofGovernmentMarketsHawkerCentres.csv")
 
 #isolate the postal code from the address column of the hawker centre
-hawkers <- hawker_centers %>% mutate(location_of_centre = str_replace(location_of_centre, ", S(", "-")) %>%
+hawkers <- hawker_centers %>% mutate(location_of_centre = str_replace(location_of_centre, ", S\\(", "-")) %>%
   separate(location_of_centre, c("address", "postal"), sep = "-") %>%
   mutate(postal = str_replace(postal, "\\(", ""))%>%
   mutate(postal = str_replace(postal, "\\)", ""))
 
 hawker_centers_geocode = get_lat_long_postal_xy(hawkers$postal)
 # write.csv(hawker_centers_geocode, "backend/hawker_centres_geocode.csv")
+
+primary_schools = read.csv("backend/primary_schools.csv")
+primary_schools <- primary_schools %>% mutate(Address = str_replace(Address, ", S", "-")) %>%
+  separate(Address, c("address", "postal"), sep = "-")
+
+primary_schools_geocode = get_lat_long_postal_xy(primary_schools$postal)
+
+# write.csv(primary_schools_geocode, "backend/primary_schools_geocode.csv")
 ##########################################################################################
 # Test Example of ONEMAP API Call
 # Construct the API request URL
@@ -105,3 +113,21 @@ hawker_centers_geocode = get_lat_long_postal_xy(hawkers$postal)
 # # View the data
 # df
 ##########################################################################################
+# #Web data scraping of list of primary schools using CSS selectors
+# # install.packages("rvest")
+# library(rvest)
+# 
+# url <- "https://cloverhome.sg/primary-school-list/"
+# # Find all HTML tables on the page
+# tables <- read_html(url) %>% html_elements("table")
+# # Number of tables available
+# length(tables)
+# 
+# #convert the second table to a tibble
+# records = tables[[1]] %>% html_table()
+# primary_schools = write.csv(records, "backend/primary_schools.csv")
+
+
+
+
+
