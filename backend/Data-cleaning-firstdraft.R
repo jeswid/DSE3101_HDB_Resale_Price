@@ -101,20 +101,3 @@ data_binary <- convert_to_binary(data_binary, "storey_range")
 # data_complete represents the successful binding of the 5 datasets as well as the conversion
 # of categorical variables into dummy variables 
 data_complete <- data_binary
-<<<<<<< HEAD
-
-
-########################################################################################################
-#forming the complete data + lat_long table
-#read in the lat long table we created
-data_tidy <- data_tidy %>% 
-  mutate(address = paste(block, street_name, sep = " "))
-
-lat_long_postal_xy = read.csv("lat_long_postal_xy.csv") %>% select(-1)
-
-data_merged <- data_tidy %>%
-  left_join(lat_long_postal_xy, by = "address")
-
-########################################################################################################
-=======
->>>>>>> ebc366f7e90138521f5bb822cbf5e764ffacc337
