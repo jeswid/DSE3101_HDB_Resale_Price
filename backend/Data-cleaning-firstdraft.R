@@ -11,11 +11,11 @@ library(httr)
 library(jsonlite)
 
 # read the HDB resale data from 1990 - 2024 into R
-data1 <- read.csv("backend/ResaleFlatPricesBasedonApprovalDate19901999.csv")
-data2 <- read.csv("backend/ResaleFlatPricesBasedonApprovalDate2000Feb2012.csv")
-data3 <- read.csv("backend/ResaleFlatPricesBasedonRegistrationDateFromMar2012toDec2014.csv")
-data4 <- read.csv("backend/ResaleFlatPricesBasedonRegistrationDateFromJan2015toDec2016.csv")
-data5 <- read.csv("backend/ResaleflatpricesbasedonregistrationdatefromJan2017onwards.csv")
+data1 <- read.csv("ResaleFlatPricesBasedonApprovalDate19901999.csv")
+data2 <- read.csv("ResaleFlatPricesBasedonApprovalDate2000Feb2012.csv")
+data3 <- read.csv("ResaleFlatPricesBasedonRegistrationDateFromMar2012toDec2014.csv")
+data4 <- read.csv("ResaleFlatPricesBasedonRegistrationDateFromJan2015toDec2016.csv")
+data5 <- read.csv("ResaleflatpricesbasedonregistrationdatefromJan2017onwards.csv")
 
 # Convert the remaining lease from "years and months" into number of years in decimal places
 convert_remaining_lease <- function(data) {
@@ -58,6 +58,7 @@ data_tidy <- data_complete %>%
 
 # Check for any NA values in our merged dataframe
 sum(is.na(data_tidy))
+
 
 ##########################################################################################
 # Getting the latitude and longitude of each unique address 
@@ -158,4 +159,16 @@ data_binary <- convert_to_binary(data_binary, "storey_range")
 # data_complete represents the successful binding of the 5 datasets as well as the conversion
 # of categorical variables into dummy variables 
 data_complete <- data_binary
+
+
+########################################################################################################
+
+#read in the lat long table we created
+data_tidy <- data_tidy %>% 
+  mutate(address = paste(block, street_name, sep = " "))
+
+lat_long = read.csv("lat_long.csv") %>% select(-X)
+
+data_latlong_merged <- data_tidy %>%
+  left_join(lat_long, by = "address")
 
