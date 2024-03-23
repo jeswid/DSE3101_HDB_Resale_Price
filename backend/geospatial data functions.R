@@ -86,7 +86,7 @@ find_nearest <- function(house, amenity, radius=1) {
     for (ind in 1:nrow(amenity)) {
       eachloc <- amenity[ind, 'address']
       amenity_loc <- c(amenity[ind, 'long'], amenity[ind, 'lat']) # long and lat of amenities
-      distance <- as.numeric(distm(flat_loc, amenity_loc) / 1000)  # in kilometers
+      distance <- as.numeric(distHaversine(flat_loc, amenity_loc) / 1000)  # in kilometers
       if (distance <= radius) {
         nearest_amenity[3] <- as.numeric(nearest_amenity[3]) + 1
       }
@@ -102,7 +102,7 @@ find_nearest <- function(house, amenity, radius=1) {
 }
 
 lat_long_postal_xy = read.csv("backend/lat_long_postal_xy.csv") %>% select(-1)
-mrt_geocode = read.csv("backend/mrt_geocode.csv")
+mrt_geocode = read.csv("backend/mrt_geocode.csv") %>% rename(c("address" = "street"))
 supermarkets_geocode = read.csv("backend/supermarkets_geocode.csv")
 hawker_centers_geocode = read.csv("backend/hawker_centres_geocode.csv")
 primary_schools_geocode = read.csv("backend/primary_schools_geocode.csv")
