@@ -1,6 +1,5 @@
 # firstly, load all the required packages
 library(tidyverse)
-library(dplyr)
 library(plotly)
 library(lubridate)
 library(stringr)
@@ -9,13 +8,14 @@ library(plyr)
 library(caret)
 library(httr) 
 library(jsonlite)
+library(geosphere)
 
 # read the HDB resale data from 1990 - 2024 into R
-data1 <- read.csv("ResaleFlatPricesBasedonApprovalDate19901999.csv")
-data2 <- read.csv("ResaleFlatPricesBasedonApprovalDate2000Feb2012.csv")
-data3 <- read.csv("ResaleFlatPricesBasedonRegistrationDateFromMar2012toDec2014.csv")
-data4 <- read.csv("ResaleFlatPricesBasedonRegistrationDateFromJan2015toDec2016.csv")
-data5 <- read.csv("ResaleflatpricesbasedonregistrationdatefromJan2017onwards.csv")
+data1 <- read.csv("backend/ResaleFlatPricesBasedonApprovalDate19901999.csv")
+data2 <- read.csv("backend/ResaleFlatPricesBasedonApprovalDate2000Feb2012.csv")
+data3 <- read.csv("backend/ResaleFlatPricesBasedonRegistrationDateFromMar2012toDec2014.csv")
+data4 <- read.csv("backend/ResaleFlatPricesBasedonRegistrationDateFromJan2015toDec2016.csv")
+data5 <- read.csv("backend/ResaleflatpricesbasedonregistrationdatefromJan2017onwards.csv")
 
 # Convert the remaining lease from "years and months" into number of years in decimal places
 convert_remaining_lease <- function(data) {
@@ -50,26 +50,48 @@ data1_2_3 <- rbind(data1, data2, data3) %>%mutate(date = ym(month))%>%
   select(-resale_price) %>%
   rename(c("resale_price_new" = "resale_price"))
 
-data_complete <- rbind.fill(data1_2_3, data4, data5) 
+data_tidy <- rbind.fill(data1_2_3, data4, data5) 
 
 #create separate year and month columns to create date dummy variables
-data_tidy <- data_complete %>%
-  separate(month, c("year", "month"), sep = "-")
+data_tidy <- data_tidy %>%
+  separate(month, c("year", "month"), sep = "-") %>% 
+  mutate(address = paste(block, street_name, sep = " "))
 
 # Check for any NA values in our merged dataframe
 sum(is.na(data_tidy))
 
 ########################################################################################################
-#forming the complete data + lat_long table
-#read in the lat long table we created
-data_tidy <- data_tidy %>% 
-  mutate(address = paste(block, street_name, sep = " "))
-
+# forming the hdb resale data set + lat_long_postal_xy table
+# read in the lat_long_postal_xy table we created
 lat_long_postal_xy = read.csv("backend/lat_long_postal_xy.csv")
 
-data_merged <- data_tidy %>%
-  left_join(lat_long_postal_xy, by = "address")
+# Tables of nearest amenities 
+nearest_mrt = read.csv("backend/nearest_mrt.csv") %>% select(-1)
+nearest_supermarket = read.csv("backend/nearest_supermarket.csv") %>% select(-1)
+nearest_hawkers = read.csv("backend/nearest_hawkers.csv") %>% select(-1)
+nearest_primary_schools = read.csv("backend/nearest_primary_schools.csv") %>% select(-1)
+nearest_hospital = read.csv("backend/nearest_hospital.csv") %>% select(-1)
 
+# Left join the hdb block details with the nearest amenities 
+# MRT, Supermarket, Hawkers, Primary Schools, Hospitals
+lat_long_postal_xy = left_join(lat_long_postal_xy, nearest_mrt, by = c("address" = "Address"))
+lat_long_postal_xy = left_join(lat_long_postal_xy, nearest_supermarket, by = c("address" = "Address"))
+lat_long_postal_xy = left_join(lat_long_postal_xy, nearest_hawkers, by = c("address" = "Address"))
+lat_long_postal_xy = left_join(lat_long_postal_xy, nearest_primary_schools, by = c("address" = "Address"))
+lat_long_postal_xy = left_join(lat_long_postal_xy, nearest_hospital, by = c("address" = "Address"))
+
+# CBD long and lat
+cbd_lat = 1.287953
+cbd_long = 103.851784
+cbd_coords = c(cbd_long,cbd_lat)
+
+# Adding a column for distance to CBD
+lat_long_postal_xy <- lat_long_postal_xy %>%
+  mutate(dist_cbd = distHaversine(cbd_coords, cbind(long, lat))/1000)
+
+data_merged <- data_tidy %>%
+  left_join(lat_long_postal_xy, by = "address") %>%
+  na.omit()
 ########################################################################################################
 
 #function for n - 1 binary regressors form 

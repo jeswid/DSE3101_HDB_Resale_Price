@@ -3,11 +3,12 @@ library(tidyverse)
 
 # Getting the latitude and longitude of each unique address
 geo_code <- function(address) {
-  lat <- 1.2996418818103135 
+  lat <- 1.2996418818103135
   lon <- 103.80010216304007
   x <- 24303.3101027
   y <- 31333.3389857
   postal <- 148812
+  street <- "300 TANGLIN HALT ROAD NEW TOWN CAREHUT SINGAPORE 148812"
   tryCatch({
     address = str_replace_all(address," ","%20")
     base_url <- "https://www.onemap.gov.sg/api/common/elastic/search?searchVal="
@@ -23,78 +24,115 @@ geo_code <- function(address) {
     x <- as.numeric(df["X"])
     y <- as.numeric(df["Y"])
     postal <- as.numeric(df["POSTAL"])
+    street <- as.character(df["ADDRESS"])
   }, error = function(e) {
     lat <- 1.2996418818103135
     lon <- 103.80010216304007
     x <- 24303.3101027
     y <- 31333.3389857
     postal <- 148812
+    street <- "300 TANGLIN HALT ROAD NEW TOWN CAREHUT SINGAPORE 148812"
   })
-  return(c(lat, lon, x, y, postal))
+  return(c(lat, lon, postal, x,  y, street))
 }
 
-# Define the function
-get_lat_long_postal_xy <- function(unique_addresses) {
-  # Create an empty data frame
-  lat_long_postal_xy <- data.frame(
-    address = character(),
+# Creating Geo-coordinates of nearby amenities for each HDB block
+get_details <- function(unique_addresses) {
+  details <- data.frame(
     lat = numeric(),
     long = numeric(),
     postal = numeric(),
     x = numeric(),
     y = numeric(),
-    stringsAsFactors = FALSE # Prevent conversion of character to factor
+    street = character(),
+    stringsAsFactors = FALSE
   )
-  
-  # Iterate through unique_addresses and add rows to the data frame
+
   for (address in unique_addresses) {
     coords <- geo_code(address)
-    row <- data.frame(address = address, lat = coords[1], long = coords[2], postal = coords[5], x = coords[3], y = coords[4], stringsAsFactors = FALSE)
-    lat_long_postal_xy <- bind_rows(lat_long_postal_xy, row)
-  }
-  
-  return(lat_long_postal_xy)
-}
-  
-# HDB Geo Coordinates
-lat_long_postal_xy = get_lat_long_postal_xy(unique(data_tidy$address)) %>%
-  select(-1) 
 
+    # Check if coords is NULL or has insufficient length
+    if (is.null(coords) || length(coords) < 6) {
+      warning(paste("Skipping address due to insufficient data:", address))
+      next  # Skip to the next iteration
+    }
+
+    # Convert data types explicitly
+    row <- data.frame(
+      lat = as.numeric(coords[1]),
+      long = as.numeric(coords[2]),
+      postal = as.numeric(coords[3]),
+      x = as.numeric(coords[4]),
+      y = as.numeric(coords[5]),
+      street = as.character(coords[6]),
+      stringsAsFactors = FALSE
+    )
+    details <- bind_rows(details, row)
+  }
+  return(details)
+}
+
+# HDB Geo Coordinates
+lat_long_postal_xy = get_details(unique(data_tidy$address)) %>%
+  select(-1) 
 lat_long_postal_xy = lat_long_postal_xy %>%
-  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values
+  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values 
 # write.csv(lat_long_postal_xy, "backend/lat_long_postal_xy.csv")
 
 # MRT stations Geo Coordinates
 mrt = read_excel("backend/Train Station Codes and Chinese Names.xls")
-mrt_geocode = get_lat_long_postal_xy(mrt$stn_code)
+mrt_geocode = get_details(mrt$stn_code)
 mrt_geocode = mrt_geocode %>%
   filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values
 # write.csv(mrt_geocode, "backend/mrt_geocode.csv")
 
 # Supermarkets Geo Coordinates
 supermarkets = read.csv("backend/ListofSupermarketLicences.csv")
-supermarkets_geocode = get_lat_long_postal_xy(supermarkets$postal_code)
+supermarkets_geocode = get_details(supermarkets$postal_code)
 supermarkets_geocode = supermarkets_geocode %>% 
-  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values
+  filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
+  select(-1)
 # write.csv(supermarkets_geocode, "backend/supermarkets_geocode.csv")
 
 # Hawker centers Geo Coordinates
 hawker_centers = read.csv("backend/ListofGovernmentMarketsHawkerCentres.csv")
-hawker_centers_geocode = get_lat_long_postal_xy(hawker_centers$location_of_centre)
+hawker_centers_geocode = get_details(hawker_centers$location_of_centre)
 hawker_centers_geocode = hawker_centers_geocode %>% 
-  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values
+  filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
+  select(-1)
 # write.csv(hawker_centers_geocode, "backend/hawker_centres_geocode.csv")
 
 # Primary Schools Geo Coordinates
 primary_schools = read.csv("primary_schools.csv")
-primary_schools_geocode = get_lat_long_postal_xy(hawker_centers$location_of_centre)
+primary_schools_geocode = get_details(hawker_centers$location_of_centre)
 primary_schools_geocode = primary_schools_geocode %>% 
-  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values
-# write.csv(hawker_centers_geocode, "backend/primary_schools_geocode.csv")
+  filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
+  select(-1)
+# write.csv(primary_schools_geocode, "backend/primary_schools_geocode.csv")
 
+# Hospitals Geo Coordinates
+# web data scraping of list of hospitals 
+library(rvest)
+
+url <- "https://en.wikipedia.org/wiki/List_of_hospitals_in_Singapore"
+# Find all HTML tables on the page
+tables <- read_html(url) %>% html_elements("table")
+# Number of tables available
+length(tables)
+
+#convert the second table to a tibble
+records1 = tables[[1]] %>% html_table()
+records2 = tables[[2]] %>% html_table()
+hospitals <- rbind(records1, records2) %>%
+  select(-Opened, -Ownership, -Beds, -Staff) %>%
+  mutate(postal = c(529889, 229899, 544886, 169608, 768828, 308433, 159964, 119074, 609606, 574623,  289891,217562, 258500, 228510, 329563, 427990, 188770, 307677, 547530, 168582, 544835, 768024, 609606, 569766, 329562, 529895, 659674))
+# write.csv(hospitals, "backend/hospitals.csv")
+
+hospitals = read.csv("backend/hospitals.csv")
+hospital_geocode <- get_details(hospitals$postal)
 
 ##########################################################################################
-# Getting distance to nearest MRT
+# Getting distance to nearest amenities (Creating the respective tables)
 library(geosphere)
 
 find_nearest <- function(house, amenity, radius=1) {
@@ -121,17 +159,44 @@ find_nearest <- function(house, amenity, radius=1) {
   return(results)
 }
 
-lat_long_postal_xy = read.csv("backend/lat_long_postal_xy.csv") 
-mrt_geocode = read.csv("backend/mrt_geocode.csv") %>% rename(c("address" = "street"))
-supermarkets_geocode = read.csv("backend/supermarkets_geocode.csv") 
-hawker_centers_geocode = read.csv("backend/hawker_centres_geocode.csv")
-primary_schools_geocode = read.csv("backend/primary_schools_geocode.csv")
+lat_long_postal_xy <- read.csv("backend/lat_long_postal_xy.csv") %>% 
+  select(-1) 
+mrt_geocode = read.csv("backend/mrt_geocode.csv") %>% rename(c("address" = "street")) %>% select(-1)
+supermarkets_geocode = read.csv("backend/supermarkets_geocode.csv") %>% rename(c("address" = "street")) %>% select(-1)
+hawker_centers_geocode = read.csv("backend/hawker_centres_geocode.csv") %>% rename(c("address" = "street")) %>% select(-1)
+primary_schools_geocode = read.csv("backend/primary_schools_geocode.csv") %>% rename(c("address" = "street")) %>% select(-1)
+hospitals_geocode = read.csv("backend/hospital_geocode.csv") %>% rename(c("address" = "street")) %>% select(-1)
 
 # Call the find_nearest function with the sample data
 nearest_mrt <- find_nearest(lat_long_postal_xy, mrt_geocode)
+nearest_mrt <- nearest_mrt %>%
+  rename(c("nearest_mrt" = "Nearest_Amenity", "dist_to_nearest_mrt" = "Distance", 
+           "mrt_1km" = "Amenity_Count"))
+# write.csv(nearest_mrt, "backend/nearest_mrt.csv")
+
 nearest_supermarket <- find_nearest(lat_long_postal_xy, supermarkets_geocode)
+nearest_supermarket <- nearest_supermarket %>%
+  rename(c("nearest_supermarket" = "Nearest_Amenity", "dist_to_nearest_supermarket" = "Distance", 
+           "supermarket_1km" = "Amenity_Count"))
+# write.csv(nearest_supermarket, "backend/nearest_supermarket.csv")
+
 nearest_hawkers <- find_nearest(lat_long_postal_xy, hawker_centers_geocode)
+nearest_hawkers <- nearest_hawkers %>%
+  rename(c("nearest_hawkers" = "Nearest_Amenity", "dist_to_nearest_hawkers" = "Distance", 
+           "hawkers_1km" = "Amenity_Count"))
+# write.csv(nearest_hawkers, "backend/nearest_hawkers.csv")
+
 nearest_primary_schools <- find_nearest(lat_long_postal_xy, primary_schools_geocode)
+nearest_primary_schools <- nearest_primary_schools %>%
+  rename(c("nearest_primary_schools" = "Nearest_Amenity", "dist_to_nearest_primary_schools" = "Distance", 
+           "primary_schools_1km" = "Amenity_Count"))
+# write.csv(nearest_primary_schools, "backend/nearest_primary_schools.csv")
+
+nearest_hospital <- find_nearest(lat_long_postal_xy, hospitals_geocode)
+nearest_hospital <- nearest_hospital %>%
+  rename(c("nearest_hospital" = "Nearest_Amenity", "dist_to_nearest_hospital" = "Distance", 
+           "hospitals_1km" = "Amenity_Count"))
+# write.csv(nearest_hospital, "backend/nearest_hospital.csv")
 
 ##########################################################################################
 # Test Example of ONEMAP API Call
