@@ -58,24 +58,40 @@ get_lat_long_postal_xy <- function(unique_addresses) {
   
 # HDB Geo Coordinates
 lat_long_postal_xy = get_lat_long_postal_xy(unique(data_tidy$address)) %>%
-  select(-1) %>%
-  filter(lat <= 1.299641 | lat >= 1.29962) # Remove the default values
+  select(-1) 
+
+lat_long_postal_xy = lat_long_postal_xy %>%
+  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values
 # write.csv(lat_long_postal_xy, "backend/lat_long_postal_xy.csv")
 
 # MRT stations Geo Coordinates
 mrt = read_excel("backend/Train Station Codes and Chinese Names.xls")
 mrt_geocode = get_lat_long_postal_xy(mrt$stn_code)
+mrt_geocode = mrt_geocode %>%
+  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values
 # write.csv(mrt_geocode, "backend/mrt_geocode.csv")
 
 # Supermarkets Geo Coordinates
 supermarkets = read.csv("backend/ListofSupermarketLicences.csv")
 supermarkets_geocode = get_lat_long_postal_xy(supermarkets$postal_code)
+supermarkets_geocode = supermarkets_geocode %>% 
+  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values
 # write.csv(supermarkets_geocode, "backend/supermarkets_geocode.csv")
 
 # Hawker centers Geo Coordinates
 hawker_centers = read.csv("backend/ListofGovernmentMarketsHawkerCentres.csv")
 hawker_centers_geocode = get_lat_long_postal_xy(hawker_centers$location_of_centre)
+hawker_centers_geocode = hawker_centers_geocode %>% 
+  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values
 # write.csv(hawker_centers_geocode, "backend/hawker_centres_geocode.csv")
+
+# Primary Schools Geo Coordinates
+primary_schools = read.csv("primary_schools.csv")
+primary_schools_geocode = get_lat_long_postal_xy(hawker_centers$location_of_centre)
+primary_schools_geocode = primary_schools_geocode %>% 
+  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values
+# write.csv(hawker_centers_geocode, "backend/primary_schools_geocode.csv")
+
 
 ##########################################################################################
 # Getting distance to nearest MRT
@@ -107,7 +123,7 @@ find_nearest <- function(house, amenity, radius=1) {
 
 lat_long_postal_xy = read.csv("backend/lat_long_postal_xy.csv") 
 mrt_geocode = read.csv("backend/mrt_geocode.csv") %>% rename(c("address" = "street"))
-supermarkets_geocode = read.csv("backend/supermarkets_geocode.csv")
+supermarkets_geocode = read.csv("backend/supermarkets_geocode.csv") 
 hawker_centers_geocode = read.csv("backend/hawker_centres_geocode.csv")
 primary_schools_geocode = read.csv("backend/primary_schools_geocode.csv")
 
