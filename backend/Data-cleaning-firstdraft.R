@@ -65,7 +65,7 @@ sum(is.na(data_tidy))
 data_tidy <- data_tidy %>% 
   mutate(address = paste(block, street_name, sep = " "))
 
-lat_long_postal_xy = read.csv("lat_long_postal_xy.csv") %>% select(-1)
+lat_long_postal_xy = read.csv("backend/lat_long_postal_xy.csv")
 
 data_merged <- data_tidy %>%
   left_join(lat_long_postal_xy, by = "address")

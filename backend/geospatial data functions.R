@@ -55,8 +55,12 @@ get_lat_long_postal_xy <- function(unique_addresses) {
   
   return(lat_long_postal_xy)
 }
+  
 # HDB Geo Coordinates
-# write.csv(get_lat_long_postal_xy(unique(data_tidy$address)), "backend/lat_long_postal_xy.csv")
+lat_long_postal_xy = get_lat_long_postal_xy(unique(data_tidy$address)) %>%
+  select(-1) %>%
+  filter(lat <= 1.299641 | lat >= 1.29962) # Remove the default values
+# write.csv(lat_long_postal_xy, "backend/lat_long_postal_xy.csv")
 
 # MRT stations Geo Coordinates
 mrt = read_excel("backend/Train Station Codes and Chinese Names.xls")
@@ -101,7 +105,7 @@ find_nearest <- function(house, amenity, radius=1) {
   return(results)
 }
 
-lat_long_postal_xy = read.csv("backend/lat_long_postal_xy.csv") %>% select(-1)
+lat_long_postal_xy = read.csv("backend/lat_long_postal_xy.csv") 
 mrt_geocode = read.csv("backend/mrt_geocode.csv") %>% rename(c("address" = "street"))
 supermarkets_geocode = read.csv("backend/supermarkets_geocode.csv")
 hawker_centers_geocode = read.csv("backend/hawker_centres_geocode.csv")
