@@ -1,10 +1,5 @@
 # load the required packages
 library(tidyverse)
-library(plotly)
-library(lubridate)
-library(caret)
-library(httr) 
-library(jsonlite)
 
 # read the HDB resale data from 2017 - 2024 into R 
 # This is to ensure the accuracy of our geospatial data 
