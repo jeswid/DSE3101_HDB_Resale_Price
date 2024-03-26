@@ -73,42 +73,41 @@ get_details <- function(unique_addresses) {
 }
 
 # HDB Geo Coordinates
-lat_long_postal_xy = get_details(unique(data_tidy$address)) %>%
-  select(-1) 
+lat_long_postal_xy = get_details(unique(data_tidy$address))
 lat_long_postal_xy = lat_long_postal_xy %>%
-  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values 
-# write.csv(lat_long_postal_xy, "backend/lat_long_postal_xy.csv")
+  filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
+  na.omit()
+# write.csv(lat_long_postal_xy, "backend/processed_data/lat_long_postal_xy.csv")
 
 # MRT stations Geo Coordinates
-mrt = read_excel("backend/Train Station Codes and Chinese Names.xls")
+mrt = read_excel("backend/raw_data/Train Station Codes and Chinese Names.xls")
 mrt_geocode = get_details(mrt$stn_code)
 mrt_geocode = mrt_geocode %>%
   filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values
-# write.csv(mrt_geocode, "backend/mrt_geocode.csv")
+# write.csv(mrt_geocode, "backend/processed_data/mrt_geocode.csv")
 
 # Supermarkets Geo Coordinates
-supermarkets = read.csv("backend/ListofSupermarketLicences.csv")
+supermarkets = read.csv("backend/raw_data/ListofSupermarketLicences.csv")
 supermarkets_geocode = get_details(supermarkets$postal_code)
 supermarkets_geocode = supermarkets_geocode %>% 
   filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
-  select(-1)
-# write.csv(supermarkets_geocode, "backend/supermarkets_geocode.csv")
+# write.csv(supermarkets_geocode, "backend/processed_data/supermarkets_geocode.csv")
 
 # Hawker centers Geo Coordinates
-hawker_centers = read.csv("backend/ListofGovernmentMarketsHawkerCentres.csv")
+hawker_centers = read.csv("backend/raw_data/ListofGovernmentMarketsHawkerCentres.csv")
 hawker_centers_geocode = get_details(hawker_centers$location_of_centre)
 hawker_centers_geocode = hawker_centers_geocode %>% 
   filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
   select(-1)
-# write.csv(hawker_centers_geocode, "backend/hawker_centres_geocode.csv")
+# write.csv(hawker_centers_geocode, "backend/processed_data/hawker_centres_geocode.csv")
 
 # Primary Schools Geo Coordinates
-primary_schools = read.csv("primary_schools.csv")
+primary_schools = read.csv("backend/raw_data/primary_schools.csv")
 primary_schools_geocode = get_details(hawker_centers$location_of_centre)
 primary_schools_geocode = primary_schools_geocode %>% 
   filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
   select(-1)
-# write.csv(primary_schools_geocode, "backend/primary_schools_geocode.csv")
+# write.csv(primary_schools_geocode, "backend/processed_data/primary_schools_geocode.csv")
 
 # Hospitals Geo Coordinates
 # web data scraping of list of hospitals 
@@ -126,9 +125,9 @@ records2 = tables[[2]] %>% html_table()
 hospitals <- rbind(records1, records2) %>%
   select(-Opened, -Ownership, -Beds, -Staff) %>%
   mutate(postal = c(529889, 229899, 544886, 169608, 768828, 308433, 159964, 119074, 609606, 574623,  289891,217562, 258500, 228510, 329563, 427990, 188770, 307677, 547530, 168582, 544835, 768024, 609606, 569766, 329562, 529895, 659674))
-# write.csv(hospitals, "backend/hospitals.csv")
+# write.csv(hospitals, "backend/raw_data/hospitals.csv")
 
-hospitals = read.csv("backend/hospitals.csv")
+hospitals = read.csv("backend/raw_data/hospitals.csv")
 hospital_geocode <- get_details(hospitals$postal)
 
 ##########################################################################################
