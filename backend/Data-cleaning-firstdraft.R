@@ -89,9 +89,12 @@ cbd_coords = c(cbd_long,cbd_lat)
 lat_long_postal_xy <- lat_long_postal_xy %>%
   mutate(dist_cbd = distHaversine(cbd_coords, cbind(long, lat))/1000)
 
+# data_merged contains all the variables before creating dummies for the categorical variables
 data_merged <- data_tidy %>%
   left_join(lat_long_postal_xy, by = "address") %>%
   na.omit()
+
+# write.csv(data_merged,"backend/data_merged.csv")
 ########################################################################################################
 
 #function for n - 1 binary regressors form 
