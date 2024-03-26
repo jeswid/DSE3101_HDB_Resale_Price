@@ -103,10 +103,11 @@ hawker_centers_geocode = hawker_centers_geocode %>%
 
 # Primary Schools Geo Coordinates
 primary_schools = read.csv("backend/raw_data/primary_schools.csv")
-primary_schools_geocode = get_details(hawker_centers$location_of_centre)
+primary_schools <- primary_schools %>% mutate(Address = str_replace(Address, ", S", "-")) %>%
+  separate(Address, c("address", "postal"), sep = "-")
+primary_schools_geocode = get_details(primary_schools$postal)
 primary_schools_geocode = primary_schools_geocode %>% 
-  filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
-  select(-1)
+  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values 
 # write.csv(primary_schools_geocode, "backend/processed_data/primary_schools_geocode.csv")
 
 # Hospitals Geo Coordinates
@@ -141,7 +142,7 @@ find_nearest <- function(house, amenity, radius=1) {
     flat_loc <- c(house[index, 'long'], house[index, 'lat']) # long and lat of hdb resale
     nearest_amenity <- c("", 100, 0)
     for (ind in 1:nrow(amenity)) {
-      eachloc <- amenity[ind, 'address']
+      eachloc <- amenity[ind, 'street']
       amenity_loc <- c(amenity[ind, 'long'], amenity[ind, 'lat']) # long and lat of amenities
       distance <- as.numeric(distHaversine(flat_loc, amenity_loc) / 1000)  # in kilometers
       if (distance <= radius) {
@@ -158,44 +159,44 @@ find_nearest <- function(house, amenity, radius=1) {
   return(results)
 }
 
-lat_long_postal_xy <- read.csv("backend/lat_long_postal_xy.csv") %>% 
+lat_long_postal_xy <- read.csv("backend/processed_data/lat_long_postal_xy.csv") %>% 
   select(-1) 
-mrt_geocode = read.csv("backend/mrt_geocode.csv") %>% rename(c("address" = "street")) %>% select(-1)
-supermarkets_geocode = read.csv("backend/supermarkets_geocode.csv") %>% rename(c("address" = "street")) %>% select(-1)
-hawker_centers_geocode = read.csv("backend/hawker_centres_geocode.csv") %>% rename(c("address" = "street")) %>% select(-1)
-primary_schools_geocode = read.csv("backend/primary_schools_geocode.csv") %>% rename(c("address" = "street")) %>% select(-1)
-hospitals_geocode = read.csv("backend/hospital_geocode.csv") %>% rename(c("address" = "street")) %>% select(-1)
+mrt_geocode = read.csv("backend/processed_data/mrt_geocode.csv") %>% select(-1)
+supermarkets_geocode = read.csv("backend/processed_data/supermarkets_geocode.csv") %>% select(-1)
+hawker_centers_geocode = read.csv("backend/processed_data/hawker_centres_geocode.csv") %>% select(-1)
+primary_schools_geocode = read.csv("backend/processed_data/primary_schools_geocode.csv") %>% select(-1)
+hospitals_geocode = read.csv("backend/processed_data/hospital_geocode.csv") %>% select(-1)
 
 # Call the find_nearest function with the sample data
 nearest_mrt <- find_nearest(lat_long_postal_xy, mrt_geocode)
 nearest_mrt <- nearest_mrt %>%
   rename(c("nearest_mrt" = "Nearest_Amenity", "dist_to_nearest_mrt" = "Distance", 
            "mrt_1km" = "Amenity_Count"))
-# write.csv(nearest_mrt, "backend/nearest_mrt.csv")
+# write.csv(nearest_mrt, "backend/processed_data/nearest_mrt.csv")
 
 nearest_supermarket <- find_nearest(lat_long_postal_xy, supermarkets_geocode)
 nearest_supermarket <- nearest_supermarket %>%
   rename(c("nearest_supermarket" = "Nearest_Amenity", "dist_to_nearest_supermarket" = "Distance", 
            "supermarket_1km" = "Amenity_Count"))
-# write.csv(nearest_supermarket, "backend/nearest_supermarket.csv")
+# write.csv(nearest_supermarket, "backend/processed_data/nearest_supermarket.csv")
 
 nearest_hawkers <- find_nearest(lat_long_postal_xy, hawker_centers_geocode)
 nearest_hawkers <- nearest_hawkers %>%
   rename(c("nearest_hawkers" = "Nearest_Amenity", "dist_to_nearest_hawkers" = "Distance", 
            "hawkers_1km" = "Amenity_Count"))
-# write.csv(nearest_hawkers, "backend/nearest_hawkers.csv")
+# write.csv(nearest_hawkers, "backend/processed_data/nearest_hawkers.csv")
 
 nearest_primary_schools <- find_nearest(lat_long_postal_xy, primary_schools_geocode)
 nearest_primary_schools <- nearest_primary_schools %>%
   rename(c("nearest_primary_schools" = "Nearest_Amenity", "dist_to_nearest_primary_schools" = "Distance", 
            "primary_schools_1km" = "Amenity_Count"))
-# write.csv(nearest_primary_schools, "backend/nearest_primary_schools.csv")
+# write.csv(nearest_primary_schools, "backend/processed_data/nearest_primary_schools.csv")
 
 nearest_hospital <- find_nearest(lat_long_postal_xy, hospitals_geocode)
 nearest_hospital <- nearest_hospital %>%
   rename(c("nearest_hospital" = "Nearest_Amenity", "dist_to_nearest_hospital" = "Distance", 
            "hospitals_1km" = "Amenity_Count"))
-# write.csv(nearest_hospital, "backend/nearest_hospital.csv")
+# write.csv(nearest_hospital, "backend/processed_data/nearest_hospital.csv")
 
 ##########################################################################################
 # Test Example of ONEMAP API Call
