@@ -1,18 +1,19 @@
-# firstly, load all the required packages
+# load the required packages
 library(tidyverse)
 library(plotly)
 library(lubridate)
-library(stringr)
-library(readxl)
-library(plyr)
 library(caret)
 library(httr) 
 library(jsonlite)
-library(geosphere)
 
 # read the HDB resale data from 2017 - 2024 into R 
 # This is to ensure the accuracy of our geospatial data 
 data <- read.csv("backend/raw_data/ResaleflatpricesbasedonregistrationdatefromJan2017onwards.csv")
+
+resale_price_index <- which(names(data) == "resale_price")
+
+# Move the y variable column to the first position
+data <- data[, c(resale_price_index, setdiff(1:ncol(data), resale_price_index))]
 
 # Convert the remaining lease from "years and months" into number of years in decimal places
 convert_remaining_lease <- function(data) {
@@ -36,10 +37,64 @@ data <- convert_remaining_lease(data) %>%
   mutate(remaining_lease = remaining_lease_years + remaining_lease_months/12) %>%
   select(-remaining_lease_months, -remaining_lease_years)
 
-#create separate year and month columns to create date dummy variables
-data_tidy <- data %>%
+# create separate year and month columns
+# We decided to create month dummy variables while keeping years as a continuous variable
+data <- data %>%
   separate(month, c("year", "month"), sep = "-") %>% 
-  mutate(address = paste(block, street_name, sep = " "))
+  mutate(address = paste(block, street_name, sep = " "), year = as.numeric(year)) 
+
+# convert storey_range from categorical to continuous
+# For example, we will take the average of "01 TO 03" as 2 for the storey range
+data <- data %>%
+  separate(storey_range, into = c("lower_storey","upper_storey"), sep = " TO ") %>%
+  mutate(ave_storey = as.numeric(lower_storey) + as.numeric(upper_storey)) %>%
+  select(-c(lower_storey,upper_storey))
+
+# Merge the HDB resale data with the lat_long_postal_xy dataset
+lat_long_postal_xy = read.csv("backend/processed_data/lat_long_for_analysis.csv") %>% 
+  mutate(postal_2dig = as.character(postal_2dig)) %>%
+  select(-1)
+
+data_merged <- data %>%
+  left_join(lat_long_postal_xy, by = c("address" = "street")) %>%
+  na.omit()
+
+# Remove redundant columns from our data_merged
+data_merged <- data_merged %>%
+  select(-c(block,street_name,lease_commence_date,address))
 
 # Check for any NA values in our merged dataframe
-sum(is.na(data_tidy))
+sum(is.na(data_merged))
+
+# Get the names of the categorical columns
+get_categorical_columns <- function(data) {
+  categorical_columns <- character(0)  # Initialize an empty character vector to store column names
+  for (col in names(data)) {
+    if (is.factor(data[[col]]) || is.character(data[[col]])) {
+      categorical_columns <- c(categorical_columns, col)
+    }
+  }
+  return(categorical_columns)
+}
+
+# Perform one hot encoding to create dummy variables for categorical data
+one_hot_encoding <- function(data, column_names) {
+  for (column_name in column_names) {
+    # Get unique values in the specified column
+    unique_values <- unique(data[[column_name]])
+    # Create new columns for each unique value and populate with binary values
+    for (value in unique_values) {
+      binary_column <- as.integer(data[[column_name]] == value)
+      new_column_name <- paste(column_name, value, sep = "_")
+      data <- cbind(data, binary_column)
+      names(data)[ncol(data)] <- new_column_name
+    }
+    # Remove the original column
+    data <- data[, !names(data) %in% column_name]
+  }
+  return(data)
+}
+
+data_cleaned <- one_hot_encoding(data_merged, get_categorical_columns(data_merged))
+
+# write.csv(data_cleaned, "backend/processed_data/hdb_resale_prices.csv")

@@ -102,7 +102,6 @@ data_merged <- data_tidy %>%
 convert_to_binary <- function(data, column_name) {
   # Get unique values in the specified column
   unique_values <- unique(data[[column_name]])
-  unique_values <- unique_values[-length(unique_values)]
   # Create new columns for each unique value and populate with binary values
   for (value in unique_values) {
     binary_column <- as.integer(data[[column_name]] == value)
