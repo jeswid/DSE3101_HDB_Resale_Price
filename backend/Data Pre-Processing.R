@@ -99,7 +99,7 @@ filter_categorical_columns <- function(data) {
 df_continuous <- data_merged %>%
   filter_categorical_columns()
 
-#write.csv(df_continuous, "backend/processed_data/df_continuous")
+#write.csv(df_continuous, "backend/processed_data/hdb_resale_continuous.csv")
 
 # Perform one hot encoding to create dummy variables for categorical data
 one_hot_encoding <- function(data, column_names) {
