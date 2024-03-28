@@ -33,7 +33,7 @@ data <- convert_remaining_lease(data) %>%
   select(-remaining_lease_months, -remaining_lease_years)
 
 # create separate year and month columns
-# We decided to create month dummy variables while keeping years as a continuous variable
+# We decided to create month dummy variables while keeping years as a continuous variable - so month is categorical and year is continuous
 data <- data %>%
   separate(month, c("year", "month"), sep = "-") %>% 
   mutate(address = paste(block, street_name, sep = " "), year = as.numeric(year)) 
@@ -71,6 +71,35 @@ get_categorical_columns <- function(data) {
   }
   return(categorical_columns)
 }
+
+cat_columns <- data_merged %>% get_categorical_columns()
+
+#make sure that the town, flat type, flat model, month, and hospital_1km are converted to categorical variables
+
+convert_to_categorical <- function(data, char_columns) {
+  for (col in char_columns) {
+    if (is.character(data[[col]])) {
+      data[[col]] <- as.factor(data[[col]])
+    } else {
+      warning(paste("Column", col, "is not a character column. Skipping conversion."))
+    }
+  }
+  return(data)
+}
+
+data_merged <- convert_to_categorical(data_merged, cat_columns)
+
+
+#filter out the categorical variables to get a dataset that is filled with only the continuous variables
+filter_categorical_columns <- function(data) {
+  categorical_columns <- sapply(data, is.factor)
+  return(data[, !categorical_columns])
+}
+
+df_continuous <- data_merged %>%
+  filter_categorical_columns()
+
+#write.csv(df_continuous, "backend/processed_data/df_continuous")
 
 # Perform one hot encoding to create dummy variables for categorical data
 one_hot_encoding <- function(data, column_names) {
