@@ -96,7 +96,6 @@ data_merged <- data_tidy %>%
 
 # write.csv(data_merged,"backend/data_merged.csv")
 ########################################################################################################
-
 #function for n - 1 binary regressors form 
 # (Convert n categorical variables to (n-1) dummy variables)
 convert_to_binary <- function(data, column_name) {

@@ -122,3 +122,4 @@ one_hot_encoding <- function(data, column_names) {
 data_cleaned <- one_hot_encoding(data_merged, get_categorical_columns(data_merged))
 
 # write.csv(data_cleaned, "backend/processed_data/hdb_resale_prices.csv")
+# write.csv(data_merged, "backend/processed_data/hdb_original.csv")
