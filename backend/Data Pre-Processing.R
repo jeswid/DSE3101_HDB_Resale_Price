@@ -74,7 +74,8 @@ get_categorical_columns <- function(data) {
 
 cat_columns <- data_merged %>% get_categorical_columns()
 
-#make sure that the town, flat type, flat model, month, and hospital_1km are converted to categorical variables
+# make sure that the town, flat type, flat model, month, and hospital_1km are 
+# converted to categorical variables by changing to factor class
 
 convert_to_categorical <- function(data, char_columns) {
   for (col in char_columns) {
@@ -89,8 +90,10 @@ convert_to_categorical <- function(data, char_columns) {
 
 data_merged <- convert_to_categorical(data_merged, cat_columns)
 
+# write.csv(data_merged, "backend/processed_data/hdb_merged_no_transform.csv")
 
-#filter out the categorical variables to get a dataset that is filled with only the continuous variables
+#filter out the categorical variables to get a dataset that is filled 
+# with only the continuous variables to allow for testing of multi-collinearity 
 filter_categorical_columns <- function(data) {
   categorical_columns <- sapply(data, is.factor)
   return(data[, !categorical_columns])
@@ -99,7 +102,7 @@ filter_categorical_columns <- function(data) {
 df_continuous <- data_merged %>%
   filter_categorical_columns()
 
-#write.csv(df_continuous, "backend/processed_data/hdb_resale_continuous.csv")
+# write.csv(df_continuous, "backend/processed_data/hdb_resale_continuous.csv")
 
 # Perform one hot encoding to create dummy variables for categorical data
 one_hot_encoding <- function(data, column_names) {
@@ -122,4 +125,3 @@ one_hot_encoding <- function(data, column_names) {
 data_cleaned <- one_hot_encoding(data_merged, get_categorical_columns(data_merged))
 
 # write.csv(data_cleaned, "backend/processed_data/hdb_resale_prices.csv")
-# write.csv(data_merged, "backend/processed_data/hdb_original.csv")
