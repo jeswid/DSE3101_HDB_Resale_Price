@@ -6,7 +6,7 @@ function(input, output, session) {
   observeEvent(input$submit, {
     # This is where you can process the inputs and update the outputs.
     # For example:
-    output$output <- renderText({
+    output$homeOutput <- renderText({
       paste("You have selected:", input$flat_address, input$town, input$flat_model, input$flat_type, input$floor_area, input$storey, input$lease_commence_date)
     })
   })
