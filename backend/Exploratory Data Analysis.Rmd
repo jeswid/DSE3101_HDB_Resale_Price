@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ### Load packages and datasets
-```{r}
+```{r warning = FALSE}
 # load the required packages
 library(tidyverse)
 library(plotly)
@@ -18,21 +18,15 @@ library(lubridate)
 library(caret)
 library(httr) 
 library(jsonlite)
+library(car)
+library(gridExtra)
 
 # load our cleaned dataset
-<<<<<<< HEAD
-hdb_resale = read.csv("backend/processed_data/hdb_resale_prices.csv") %>% select(-1)
-
-#load our cleaned dataset with only continuous variables
-hdb_resale_cont <- read.csv("backend/processed_data/hdb_resale_continuous.csv") %>% select(-1)
-=======
 hdb_resale = read.csv("processed_data/hdb_resale_prices.csv") %>% select(-1)
 
 #load our cleaned dataset with only continuous variables
 hdb_resale_cont <- read.csv("processed_data/hdb_resale_continuous.csv") %>% select(-1)
->>>>>>> 091ea5d6d3ba6d6132df9d31cdddbf03667ee3d5
 ```
-
 
 ## Correlation matrix
 ```{r pressure, echo=FALSE}
@@ -69,28 +63,13 @@ top_correlation_results <- data.frame(top_variable_pairs, Correlation_Value = to
 # Print the top correlated variable pairs
 print(top_correlation_results)
 
-# Assuming you have a dataset named `hdb_data` containing the variables for which you want to calculate VIF
-# Assuming you have already calculated the correlation matrix named `correlation_matrix`
-
-# Calculate VIF for each variable
-calculate_vif <- function(correlation_matrix) {
-  diag_inv <- 1/diag(correlation_matrix)
-  vif <- diag_inv^2
-  return(vif)
-}
-
-# Apply the function to calculate VIF
-vif <- calculate_vif(correlation_matrix)
-
-# Print VIF values
-print(vif)
-
+model <- lm(resale_price ~ ., data = hdb_resale_cont)
+vif(model)
 ```
-
 
 ## Plot the histogram to check the skewness of price
 ```{r}
-#plot the HDB resale prices (density plot) to see the skewness of prices n whether we need to transform the data
+# Plot the HDB resale prices (density plot) to see the skewness of prices n whether we need to transform the data
 # Plot histogram of resale prices
 ggplot(hdb_resale, aes(x = resale_price)) +
   geom_histogram(binwidth = 10000, fill = "skyblue", color = "black") +
@@ -111,26 +90,44 @@ ggplot(hdb_resale, aes(x = log_resale_price)) +
        y = "Frequency") +
   theme_minimal()
 
-#we do log transformation bc this tends to compress higher values more than lower values, hence reducing the right skewness.
+# we do log transformation because this tends to compress higher values more than lower values, hence reducing the right skewness.
+```
+# Distributions of the regressors
+```{r}
+# Select all numeric variables except log_resale_price
+numeric_vars <- hdb_resale_cont %>%
+  select(-resale_price)
+
+# Function to create histograms for each variable
+plot_histograms <- function(data) {
+```
+
+
+```{r}
+plots <- lapply(names(data), function(var) {
+    ggplot(data, aes_string(x = var)) +
+      geom_histogram(binwidth = 0.2, fill = "skyblue", color = "black") +
+      labs(title = paste("Histogram of", var),
+           x = var,
+           y = "Frequency") +
+      theme_minimal()
+  })
+  return(plots)
+}
+
+# Create histograms for all numeric variables
+histogram_plots <- plot_histograms(numeric_vars)
+
+histogram_plots
 ```
 
 
 ## Plot a barplot of median prices in each town
 ```{r}
-<<<<<<< HEAD
-#plot median HDB resale prices by town, facet wrap by other categories
-# Assuming you have a dataset named `hdb_data` with columns `town`, `resale_price`, and other categorical variables for facet wrapping
-# Assuming ggplot2 is already installed, if not, install it using install.packages("ggplot2")
-library(ggplot2)
-
-#read in non transformed data
-hdb_ori <- read.csv("backend/processed_data/hdb_original.csv")
-=======
 # plot median HDB resale prices by town, facet wrap by other categories
 
 #read in non transformed data
 hdb_ori <- read.csv("processed_data/hdb_merged_no_transform.csv")
->>>>>>> 091ea5d6d3ba6d6132df9d31cdddbf03667ee3d5
 
 # Calculate median resale price by town
 median_prices <- aggregate(resale_price ~ town, hdb_ori, median)
@@ -138,11 +135,7 @@ median_prices <- aggregate(resale_price ~ town, hdb_ori, median)
 # Reorder town based on median resale prices (from highest to lowest)
 hdb_ori$town <- factor(hdb_ori$town, levels = median_prices[order(median_prices$resale_price, decreasing = TRUE), "town"])
 
-<<<<<<< HEAD
-#create another column called median_prices
-=======
 # Create another column called median_prices
->>>>>>> 091ea5d6d3ba6d6132df9d31cdddbf03667ee3d5
 # Calculate median resale price for each town
 median_prices <- hdb_ori %>%
   group_by(town) %>%
