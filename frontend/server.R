@@ -1,11 +1,3 @@
-#
-# This is the server logic of a Shiny web application. You can run the
-# application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    https://shiny.posit.co/
-#
 
 library(shiny)
 
@@ -18,5 +10,11 @@ function(input, output, session) {
       paste("You have selected:", input$flat_address, input$town, input$flat_model, input$flat_type, input$floor_area, input$storey, input$lease_commence_date)
     })
   })
+  output$mapOutput <- renderText({ "Map will be displayed here." })
+  
+  output$priceOutput <- renderText({ "Predicted price will be shown here." })
+  
+
+  
 }
 

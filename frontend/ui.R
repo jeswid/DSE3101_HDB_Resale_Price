@@ -1,12 +1,10 @@
 library(shiny)
 
-fluidPage(
-  titlePanel("Interactive App to Visualize and Predict Singapore HDB Resale Prices"),
+ui <- fluidPage(
+  titlePanel("Visualizing and Predicting Singapore HDB Resale Prices"),
   
-  # Sidebar layout with input controls
   sidebarLayout(
     sidebarPanel(
-      # Input: Form to collect user inputs
       textInput("flat_address", "Flat Address or Postal Code", value = "988B BUANGKOK GREEN"),
       
       selectInput("town", "Town", 
@@ -45,11 +43,20 @@ fluidPage(
       actionButton("submit", "Submit HDB 🔎")
     ),
     
-    # Main panel for displaying outputs
     mainPanel(
-      textOutput("output")
-      # Placeholders for other UI elements like plots, tables, etc.
+      # Using tabsetPanel to create tabs
+      tabsetPanel(
+        tabPanel("Map", 
+                 # Placeholder for map output
+                 textOutput("mapOutput") # You can replace this with your map rendering output like plotOutput("map") for a leaflet map
+        ),
+        tabPanel("Predicted Price", 
+                 # Placeholder for predicted price output
+                 textOutput("priceOutput") # You might want to replace this with your actual output element
+        )
+      )
     )
   )
 )
+
 
