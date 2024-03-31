@@ -10,7 +10,7 @@ function(input, output, session) {
       paste("You have selected:", input$flat_address, input$town, input$flat_model, input$flat_type, input$floor_area, input$storey, input$lease_commence_date)
     })
   })
-  output$mapOutput <- renderText({ "Map will be displayed here." })
+  output$geoOutput <- renderText({ "Map will be displayed here." })
   
   output$priceOutput <- renderText({ "Predicted price will be shown here." })
   

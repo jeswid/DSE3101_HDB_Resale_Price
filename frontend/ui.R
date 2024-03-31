@@ -53,7 +53,7 @@ ui <- fluidPage(
       mainPanel(
         tabsetPanel(
           tabPanel("Home",textOutput("homeOutput")),
-          tabPanel("Map", textOutput("mapOutput")),
+          tabPanel("Geospatial Analysis ", textOutput("geoOutput")),
           tabPanel("Predicted Price", textOutput("priceOutput"))
         )
       )
