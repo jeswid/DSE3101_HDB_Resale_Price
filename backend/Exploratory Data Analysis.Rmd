@@ -111,9 +111,9 @@ plots <- lapply(names(data), function(var) {
            x = var,
            y = "Frequency") +
       theme_minimal()
-  })
+  
   return(plots)
-}
+} )
 
 # Create histograms for all numeric variables
 histogram_plots <- plot_histograms(numeric_vars)
@@ -150,4 +150,37 @@ ggplot(median_prices, aes(x = town, y = median_price)) +
        x = "Town",
        y = "Median Resale Price (SGD)") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 7))
+
+```
+
+### check for outliers
+```{r}
+#using Tukey's definition of outliers:
+# Tukey's definition of an outlier: anything outside the range of
+# [Q1 ??? 1.5 × (Q3 ??? Q1), Q3 + 1.5 × (Q3 ??? Q1)]
+
+find_outliers <- function(data, threshold = 1.5) {
+  outliers <- list()
+  for (col in colnames(data)) {
+    # Calculate the lower and upper quartiles
+    q1 <- quantile(data[[col]], 0.25)
+    q3 <- quantile(data[[col]], 0.75)
+    
+    # Calculate the IQR
+    iqr <- q3 - q1
+    
+    # Define the lower and upper bounds for outliers
+    lower_bound <- q1 - threshold * iqr
+    upper_bound <- q3 + threshold * iqr
+    
+    # Find outliers in the column
+    outliers[[col]] <- data[[col]][data[[col]] < lower_bound | data[[col]] > upper_bound]
+  }
+  return(outliers)
+}
+
+#check for outliers
+outliers <- find_outliers(hdb_resale_cont)
+
+
 ```
