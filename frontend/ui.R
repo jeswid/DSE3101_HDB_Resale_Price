@@ -47,7 +47,6 @@ ui <- fluidPage(
                                                     '16 TO 18', '19 TO 21', '22 TO 24', '25 TO 27', '28 TO 30',
                                                     '31 TO 33', '34 TO 36', '37 TO 39', '40 TO 42', '43 TO 45',
                                                     '46 TO 48', '49 TO 51'), selected = "07 TO 09"),
-        selectInput("lease_commence_date", "Lease Commencement Date", choices = as.character(rev(1966:2016)), selected = "1967"),
         actionButton("submit", "Submit HDB 🔎")
       ),
       
