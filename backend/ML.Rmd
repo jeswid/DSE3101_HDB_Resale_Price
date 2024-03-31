@@ -16,9 +16,8 @@ library(caret)
 # Set seed for reproducibility
 set.seed(42)
 
-hdb_data = read.csv("processed_data/hdb_merged_no_transform.csv") %>% 
-  select(-1) %>%
-  mutate(month = as.character(month),postal_2dig = as.character(postal_2dig))
+hdb_data = read.csv("processed_data/hdb_resale_prices.csv") %>% 
+  select(-1)
 
 # Stratified Sampling by 'year'
 strata_cols <- c("year")
@@ -39,41 +38,8 @@ validation_data <- remaining_data %>%
   ungroup() 
 
 test_data <- anti_join(remaining_data, validation_data)
-
-get_categorical_columns <- function(data) {
-  categorical_columns <- character(0)  # Initialize an empty character vector to store column names
-  for (col in names(data)) {
-    if (is.factor(data[[col]]) || is.character(data[[col]])) {
-      categorical_columns <- c(categorical_columns, col)
-    }
-  }
-  return(categorical_columns)
-}
-
-one_hot_encoding <- function(data, column_names) {
-  for (column_name in column_names) {
-    # Get unique values in the specified column
-    unique_values <- unique(data[[column_name]])
-    # Create new columns for each unique value and populate with binary values
-    for (value in unique_values) {
-      binary_column <- as.integer(data[[column_name]] == value)
-      new_column_name <- paste(column_name, value, sep = "_")
-      data <- cbind(data, binary_column)
-      names(data)[ncol(data)] <- new_column_name
-    }
-    # Remove the original column
-    data <- data[, !names(data) %in% column_name]
-  }
-  return(data)
-}
-
-cat_columns <- hdb_data %>% get_categorical_columns()
-train_data = one_hot_encoding(train_data, cat_columns)
-validation_data = one_hot_encoding(validation_data, cat_columns)
-test_data = one_hot_encoding(test_data, cat_columns)
-
-as.tibble(hdb_data)
 ```
+
 ## Create train,test and validation sets
 ```{r}
 # from our EDA results, since we know that the distribution for the price variable is right skewed, we need to transform the price into log price to normalise
@@ -94,13 +60,15 @@ validation_ml <- validation_data %>% mutate(log_price = log(resale_price)) %>%
 model <- lm(log_price ~ ., data = train_ml)
  
 # Make predictions on the test data
-predictions <- exp(predict(model, newdata = test_ml))
+predictions <- predict(model, newdata = test_ml)
  
 # Calculate RMSE
-rmse <- sqrt(mean((exp(test_ml$log_price) - predictions)^2))
+rmse <- sqrt(mean((test_ml$log_price - predictions)^2))
  
 # Print RMSE
 print(paste("RMSE for benchmark OLS:", rmse))
+
+summary(model)
 ```
 
 ## Machine Learning Techniques
@@ -133,15 +101,30 @@ print(paste("RMSE for Regression Trees:", rmse_rt))
 
 ### Need changes
 ```{r}
+library(randomForest)
 # Random Forest
-rf_model <- train(
-  resale_price ~ ., 
-  data = train_data, 
-  method = "rf", 
-  trControl = trainControl(method = "cv", number = 10), 
-  tuneLength = 10)
+#Now try the Random forest. To go from bagging to proper random forest, we
+#need to add the option mtry - number of predictors randomly sampled for each tree:
+#Here we set mtry=4 to reflect the default choice of P/3 for regression problems.
+rffit = randomForest(log_price~.,data=train_ml,ntree=5000, mtry=4)
 
-print(rf_model)
+windows()
+plot(rffit, ylim=c(13,24)) #plot the OOB error
+
+#Recall bagging is achieved with mtry=P, since here we have 13 predictors, set mtry=13:
+rffit2 = randomForest(log_price~.,data=train_ml,ntree=5000,mtry=138)
+windows()
+plot(rffit2)
+
+#Do the plot of RF vs. bagging:
+xx=seq(1,5000,1)
+windows()
+plot(xx,rffit$mse, type="l",col="blue",ylim=c(13,24), ylab="OOB MSE", xlab="B", main="Bagging vs. Random forest")
+lines(xx,rffit2$mse, type="l", col="red")
+legend("topright", c("Random Forest, m=4","Bagging"), lty=c(1,1) ,col=c("blue","red"))
+
+#"Poor" performance of RF due to the structure of the data - one really strong predictor, so if it gets kicked out,
+#the RF performance really suffers - it pays to understand how methods work to avoid losing performance!
 ```
 
 ### Need changes
@@ -193,8 +176,6 @@ lasso_mod <- linear_reg(mode = "regression",
 wf <- workflow() %>%
   add_model(lasso_mod) %>%
   add_recipe(rec)
-
-
 ```
 
 ### Need changes
