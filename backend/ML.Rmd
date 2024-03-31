@@ -40,11 +40,6 @@ validation_data <- remaining_data %>%
 
 test_data <- anti_join(remaining_data, validation_data)
 
-# Reset row names
-rownames(train_data) <- NULL
-rownames(validation_data) <- NULL
-rownames(test_data) <- NULL
-
 get_categorical_columns <- function(data) {
   categorical_columns <- character(0)  # Initialize an empty character vector to store column names
   for (col in names(data)) {
@@ -76,8 +71,10 @@ cat_columns <- hdb_data %>% get_categorical_columns()
 train_data = one_hot_encoding(train_data, cat_columns)
 validation_data = one_hot_encoding(validation_data, cat_columns)
 test_data = one_hot_encoding(test_data, cat_columns)
-```
 
+as.tibble(hdb_data)
+```
+## Create train,test and validation sets
 ```{r}
 # from our EDA results, since we know that the distribution for the price variable is right skewed, we need to transform the price into log price to normalise
 
@@ -125,10 +122,10 @@ text(fit, use.n = TRUE, cex = .7)
 print(fit) 
 
 # method anova is used for regression 
-predictions_rt <- exp(predict(fit, test_ml, method = "anova")) 
+predictions_rt <- predict(fit, test_ml, method = "anova")
 
 # Calculate RMSE
-rmse_rt <- sqrt(mean((exp(test_ml$log_price) - predictions_rt)^2))
+rmse_rt <- sqrt(mean((test_ml$log_price - predictions_rt)^2))
  
 # Print RMSE
 print(paste("RMSE for Regression Trees:", rmse_rt))
@@ -150,42 +147,60 @@ print(rf_model)
 ### Need changes
 ```{r}
 # Gradient Boosting Machine (GBM)
-gbm_model <- train(
-  log_price ~., 
-  data = train_ml, 
-  method = "gbm", 
-  trControl = trainControl(method = "cv", number = 10), 
-  tuneLength = 10)
+# Load the gbm package
+library(gbm)
 
+# Separate predictors (X) and response variable (Y)
+X <- subset(train_ml, select = -c(log_price)) 
+
+Y <- train_ml$log_price
+
+#tune number of trees and interaction depth using 10 fold CV
+
+# Train GBM model
+gbm_model <- gbm(Y ~ ., data = X, distribution = "gaussian", n.trees = 100, interaction.depth = 3)
+
+# Summary of the trained model
+summary(gbm_model)
+
+# Predictions on training data
+predictions_gbm <- predict(gbm_model, X, n.trees = 100, type = "response")
+
+# Evaluate model performance (if needed)
 print(gbm_model)
+
+# Calculate RMSE
+rmse_gbm <- sqrt(mean((test_ml$log_price - predictions_gbm)^2))
+ 
+# Print RMSE
+print(paste("RMSE for Gradient Boosting Model:", rmse_gbm))
+```
+
+##XG Boost
+```{r}
+library(tidymodels)
+library(tidyverse)
+library(mlbench)
+
+#define pre-processing of data using the recipe package
+rec <- recipe(log_price ~ ., data = train_ml)
+
+lasso_mod <- linear_reg(mode = "regression",
+                        penalty = tune(),
+                        mixture = 1) %>% 
+  set_engine("glmnet")
+
+wf <- workflow() %>%
+  add_model(lasso_mod) %>%
+  add_recipe(rec)
+
+
 ```
 
 ### Need changes
 ## Hedonic price function using post-LASSO and feature engineering
 ```{r}
-# Load necessary libraries
-library(glmnet)
-library(hdm)
 
-# Step 1: Load the HDB dataset
-train_ml
-
-# Step 2: Feature engineering and preprocessing
-# You may need to preprocess your data here, handle missing values, scale variables, etc.
-# For demonstration, let's assume you have already preprocessed the data and stored it in a variable named 'X'
-
-# Step 3: Use post-lasso to select relevant features
-# Assuming 'log_price' is the outcome variable and 'X' contains all predictor variables
-post_lasso <- postlasso(log_price ~ ., data = train_ml)
-
-# Extract selected features
-selected_features <- colnames(post_lasso$coefficients[!is.na(postlasso$coefficients)])
-
-# Step 4: Fit a hedonic regression model using the selected features
-model <- lm(log_price ~ ., data = train_ml[, c('log_price', selected_features)])
-
-# Step 5: Evaluate the model
-summary(model)
 ```
 
 # Principle Component Analysis
