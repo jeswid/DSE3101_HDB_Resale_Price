@@ -83,9 +83,6 @@ plot(fit, uniform = TRUE,
           main = "log_price prediction using decision trees")
 text(fit, use.n = TRUE, cex = .7) 
 
-# Print model 
-print(fit) 
-
 # method anova is used for regression 
 predictions_rt <- predict(fit, test_ml, method = "anova")
 
@@ -97,30 +94,29 @@ print(paste("RMSE for Regression Trees:", rmse_rt))
 ```
 
 ### Random Forest
-```{r}
-library(randomForest)
-#fit the random forest model
-rffit = randomForest(log_price~.,data=train_ml) 
-
-#display fitted model
-rffit
-
-#find number of trees that produce lowest test MSE
-which.min(rffit$mse)
-
-
-#find RMSE of best model
-sqrt(rffit$mse[which.min(rffit$mse)]) 
-```
-
-
+### Tuning
 ```{r}
 library(randomForest)
 # Now try the Random forest. To go from bagging to proper random forest, we 
 # need to add the option mtry - number of predictors randomly sampled for each tree: 
-# Here we set mtry=4 to reflect the default choice of P/3 for regression problems. 
+# Here we set mtry= P/3 to reflect the default choice of P/3 for regression problems. 
+ntreev = c(30,40,50)
 
-rffit = randomForest(log_price~.,data=train_ml,ntree=50, mtry=4) 
+nset = length(ntreev) #number of cases for tree numbers - will determine number of iterations in the loop
+
+for(i in 1:nset) {
+  rffit = randomForest(log_price~.,data=validation_ml,ntree=ntreev[i], mtry= 138/3)
+  predictions_rf <- predict(rffit, test_ml, method = "anova") 
+  # Calculate RMSE 
+  rmse_rt <- sqrt(mean((test_ml$log_price - predictions_rf)^2)) 
+  print(paste("RMSE for Random Forest:","(trees:", ntreev[i],")", rmse_rt))
+}
+# We pick ntree = 50 as our tuning parameter given the lowest RMSE
+```
+
+### Model with tuned parameters
+```{r}
+rffit = randomForest(log_price~.,data=train_ml,ntree=50, mtry= 138/3) 
 
 plot(rffit) #plot the OOB error 
 
@@ -132,6 +128,101 @@ rmse_rt <- sqrt(mean((test_ml$log_price - predictions_rf)^2))
 
 # Print RMSE 
 print(paste("RMSE for Random Forest:", rmse_rt))
+```
+
+### XG Boost 
+### Tuning (This code is taking too long to run)
+```{r}
+library(xgboost) 
+library(recipes)
+xgb_prep <- recipe(log_price ~ ., data = validation_ml) %>%
+  step_integer(all_nominal()) %>%
+  prep(training = validation_ml, retain = TRUE) %>%
+  juice()
+
+X_validation <- as.matrix(xgb_prep[setdiff(names(xgb_prep), "log_price")])
+Y_validation <- xgb_prep$log_price
+
+# hyperparameter grid
+hyper_grid <- expand.grid(
+  eta = 0.01,
+  max_depth = 3, 
+  min_child_weight = 3,
+  subsample = 0.5, 
+  colsample_bytree = 0.5,
+  gamma = c(0, 1, 10, 100),
+  lambda = c(0, 1e-2, 0.1, 1, 100),
+  alpha = c(0, 1e-2, 0.1, 1, 100),
+  rmse = 0,          # a place to dump RMSE results
+  trees = 0          # a place to dump required number of trees
+)
+
+# grid search
+for(i in seq_len(nrow(hyper_grid))) {
+  set.seed(42)
+  m <- xgb.cv(
+    data = X_validation,
+    label = Y_validation,
+    nrounds = 100,
+    objective = "reg:squarederror",
+    early_stopping_rounds = 50, 
+    nfold = 10,
+    verbose = 0,
+    params = list( 
+      eta = hyper_grid$eta[i], 
+      max_depth = hyper_grid$max_depth[i],
+      min_child_weight = hyper_grid$min_child_weight[i],
+      subsample = hyper_grid$subsample[i],
+      colsample_bytree = hyper_grid$colsample_bytree[i],
+      gamma = hyper_grid$gamma[i], 
+      lambda = hyper_grid$lambda[i], 
+      alpha = hyper_grid$alpha[i]
+    ) 
+  )
+  hyper_grid$rmse[i] <- min(m$evaluation_log$test_rmse_mean)
+  hyper_grid$trees[i] <- m$best_iteration
+}
+
+# results
+hyper_grid %>%
+  filter(rmse > 0) %>%
+  arrange(rmse) %>%
+  glimpse()
+```
+### Model with tuned parameters
+```{r}
+xgb_train <- recipe(log_price ~ ., data = train_ml) %>%
+  step_integer(all_nominal()) %>%
+  prep(training = train_ml, retain = TRUE) %>%
+  juice()
+
+X_train <- as.matrix(xgb_train[setdiff(names(xgb_train), "log_price")])
+Y_train <- xgb_train$log_price
+
+
+xgb.fit <- xgboost(
+  data = X_train,
+  label = Y_train,
+  nrounds = 200,
+  objective = "reg:squarederror"
+)
+
+xgb_test <- recipe(log_price ~ ., data = test_ml) %>%
+  step_integer(all_nominal()) %>%
+  prep(training = train_ml, retain = TRUE) %>%
+  juice()
+X_test <- as.matrix(xgb_test[setdiff(names(xgb_test), "log_price")])
+
+predictions_xg <- predict(xgb.fit, X_test)
+
+# Calculate RMSE 
+rmse_xg <- sqrt(mean((test_ml$log_price - predictions_xg)^2)) 
+
+# Print RMSE 
+print(paste("RMSE for Random Forest:", rmse_xg))
+
+# variable importance plot
+vip::vip(xgb.fit) 
 ```
 
 ### Need changes
@@ -147,7 +238,6 @@ X <- subset(train_ml, select = -c(log_price))
 Y <- train_ml$log_price
 
 #tune number of trees and interaction depth using 10 fold CV
-
 
 # Train GBM model, need to tune the n.trees and interaction.depth
 gbm_model <- gbm(Y ~ ., data = X, distribution = "gaussian", n.trees = 100, interaction.depth = 3)
@@ -168,10 +258,6 @@ rmse_gbm <- sqrt(mean((test_ml$log_price - predictions_gbm)^2))
 print(paste("RMSE for Gradient Boosting Model:", rmse_gbm))
 ```
 
-##XG Boost
-```{r}
-
-```
 
 ### Need changes
 ## Hedonic price function using post-LASSO and feature engineering
@@ -281,7 +367,7 @@ ann_model <- train(
 )
 ```
 
-# Principle Component Analysis
+# Principal Component Analysis
 ```{r}
 # From our EDA, since we know that some variables are highly correlated with each other, we transform the variables into independent variables using PCA
 
