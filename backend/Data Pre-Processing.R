@@ -50,13 +50,10 @@ lat_long_postal_xy = read.csv("backend/processed_data/lat_long_for_analysis.csv"
   mutate(postal_2dig = as.character(postal_2dig)) %>%
   select(-1)
 
+# Merge the HDB resale set with geospatial data
 data_merged <- data %>%
   left_join(lat_long_postal_xy, by = c("address" = "street")) %>%
   na.omit()
-
-# Remove redundant columns from our data_merged
-data_merged <- data_merged %>%
-  select(-c(block,street_name,lease_commence_date,address))
 
 # Check for any NA values in our merged dataframe
 sum(is.na(data_merged))
@@ -89,6 +86,9 @@ convert_to_categorical <- function(data, char_columns) {
 }
 
 data_merged <- convert_to_categorical(data_merged, cat_columns)
+# Remove redundant columns from our data_merged
+data_merged <- data_merged %>%
+  select(-c(block,street_name,lease_commence_date,address))
 
 # write.csv(data_merged, "backend/processed_data/hdb_merged_no_transform.csv")
 
@@ -125,3 +125,12 @@ one_hot_encoding <- function(data, column_names) {
 data_cleaned <- one_hot_encoding(data_merged, get_categorical_columns(data_merged))
 
 # write.csv(data_cleaned, "backend/processed_data/hdb_resale_prices.csv")
+
+# Get the details for each HDB block for visualisation purposes
+lat_long_vis <- read.csv("backend/processed_data/lat_long_for_visualisation.csv") %>% select(-1)
+data_for_vis <- data %>%
+  select(c(town,lease_commence_date,address))
+HDB_details <- lat_long_vis %>%
+  left_join(data_for_vis, by = c("street" = "address")) %>%
+  unique()
+# write.csv(HDB_details, "backend/processed_data/hdb_block_details.csv")

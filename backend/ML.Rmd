@@ -38,10 +38,7 @@ validation_data <- remaining_data %>%
   ungroup() 
 
 test_data <- anti_join(remaining_data, validation_data)
-```
 
-## Create train,test and validation sets
-```{r}
 # from our EDA results, since we know that the distribution for the price variable is right skewed, we need to transform the price into log price to normalise
 
 train_ml <- train_data %>% mutate(log_price = log(resale_price)) %>%
@@ -99,10 +96,29 @@ rmse_rt <- sqrt(mean((test_ml$log_price - predictions_rt)^2))
 print(paste("RMSE for Regression Trees:", rmse_rt))
 ```
 
-### Need changes
+### Random Forest
 ```{r}
 library(randomForest)
-#Now try the Random forest. To go from bagging to proper random forest, we #need to add the option mtry - number of predictors randomly sampled for each tree: #Here we set mtry=4 to reflect the default choice of P/3 for regression problems. 
+#fit the random forest model
+rffit = randomForest(log_price~.,data=train_ml) 
+
+#display fitted model
+rffit
+
+#find number of trees that produce lowest test MSE
+which.min(rffit$mse)
+
+
+#find RMSE of best model
+sqrt(rffit$mse[which.min(rffit$mse)]) 
+```
+
+
+```{r}
+library(randomForest)
+# Now try the Random forest. To go from bagging to proper random forest, we 
+# need to add the option mtry - number of predictors randomly sampled for each tree: 
+# Here we set mtry=4 to reflect the default choice of P/3 for regression problems. 
 
 rffit = randomForest(log_price~.,data=train_ml,ntree=50, mtry=4) 
 
@@ -244,6 +260,7 @@ last_fit(
   test_ml
 ) %>%
   collect_metrics()
+
 ## # A tibble: 2 x 3
 ##   .metric .estimator .estimate
 ##   <chr>   <chr>          <dbl>
@@ -254,7 +271,6 @@ last_fit(
 
 # Artificial Neural Network (ANN)
 ```{r}
-
 ann_model <- train(
   log_price ~ ., 
   data = train_ml, 
@@ -263,7 +279,6 @@ ann_model <- train(
   tuneLength = 10,
   trace = FALSE # Set to TRUE for verbose output
 )
-
 ```
 
 # Principle Component Analysis
