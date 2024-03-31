@@ -7,6 +7,7 @@ function(input, output, session) {
     # This is where you can process the inputs and update the outputs.
     # For example:
     output$homeOutput <- renderText({
+      #make the chosen into a box instead of a line
       paste("You have selected:", input$flat_address, input$town, input$flat_model, input$flat_type, input$floor_area, input$storey, input$lease_commence_date)
     })
   })
