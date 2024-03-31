@@ -63,10 +63,10 @@ model <- lm(log_price ~ ., data = train_ml)
 predictions <- predict(model, newdata = test_ml)
  
 # Calculate RMSE
-rmse <- sqrt(mean((test_ml$log_price - predictions)^2))
+rmse_ols <- sqrt(mean((test_ml$log_price - predictions)^2))
  
 # Print RMSE
-print(paste("RMSE for benchmark OLS:", rmse))
+print(paste("RMSE for benchmark OLS:", rmse_ols))
 
 summary(model)
 ```
@@ -102,29 +102,20 @@ print(paste("RMSE for Regression Trees:", rmse_rt))
 ### Need changes
 ```{r}
 library(randomForest)
-# Random Forest
-#Now try the Random forest. To go from bagging to proper random forest, we
-#need to add the option mtry - number of predictors randomly sampled for each tree:
-#Here we set mtry=4 to reflect the default choice of P/3 for regression problems.
-rffit = randomForest(log_price~.,data=train_ml,ntree=5000, mtry=4)
+#Now try the Random forest. To go from bagging to proper random forest, we #need to add the option mtry - number of predictors randomly sampled for each tree: #Here we set mtry=4 to reflect the default choice of P/3 for regression problems. 
 
-windows()
-plot(rffit, ylim=c(13,24)) #plot the OOB error
+rffit = randomForest(log_price~.,data=train_ml,ntree=50, mtry=4) 
 
-#Recall bagging is achieved with mtry=P, since here we have 13 predictors, set mtry=13:
-rffit2 = randomForest(log_price~.,data=train_ml,ntree=5000,mtry=138)
-windows()
-plot(rffit2)
+plot(rffit) #plot the OOB error 
 
-#Do the plot of RF vs. bagging:
-xx=seq(1,5000,1)
-windows()
-plot(xx,rffit$mse, type="l",col="blue",ylim=c(13,24), ylab="OOB MSE", xlab="B", main="Bagging vs. Random forest")
-lines(xx,rffit2$mse, type="l", col="red")
-legend("topright", c("Random Forest, m=4","Bagging"), lty=c(1,1) ,col=c("blue","red"))
+# method anova is used for regression 
+predictions_rf <- predict(rffit, test_ml, method = "anova") 
 
-#"Poor" performance of RF due to the structure of the data - one really strong predictor, so if it gets kicked out,
-#the RF performance really suffers - it pays to understand how methods work to avoid losing performance!
+# Calculate RMSE 
+rmse_rt <- sqrt(mean((test_ml$log_price - predictions_rf)^2)) 
+
+# Print RMSE 
+print(paste("RMSE for Random Forest:", rmse_rt))
 ```
 
 ### Need changes
@@ -132,6 +123,7 @@ legend("topright", c("Random Forest, m=4","Bagging"), lty=c(1,1) ,col=c("blue","
 # Gradient Boosting Machine (GBM)
 # Load the gbm package
 library(gbm)
+library(caret)
 
 # Separate predictors (X) and response variable (Y)
 X <- subset(train_ml, select = -c(log_price)) 
@@ -140,7 +132,8 @@ Y <- train_ml$log_price
 
 #tune number of trees and interaction depth using 10 fold CV
 
-# Train GBM model
+
+# Train GBM model, need to tune the n.trees and interaction.depth
 gbm_model <- gbm(Y ~ ., data = X, distribution = "gaussian", n.trees = 100, interaction.depth = 3)
 
 # Summary of the trained model
@@ -161,6 +154,12 @@ print(paste("RMSE for Gradient Boosting Model:", rmse_gbm))
 
 ##XG Boost
 ```{r}
+
+```
+
+### Need changes
+## Hedonic price function using post-LASSO and feature engineering
+```{r}
 library(tidymodels)
 library(tidyverse)
 library(mlbench)
@@ -175,12 +174,95 @@ lasso_mod <- linear_reg(mode = "regression",
 
 wf <- workflow() %>%
   add_model(lasso_mod) %>%
-  add_recipe(rec)
+  add_recipe(rec) %>%
+  fit(data = train_ml)
+
+lasso_fit <- wf %>% pull_workflow_fit() %>%
+  tidy()
+
+#tuning using bootstrap
+set.seed(1234)
+office_boot <- bootstraps(validation_ml, strata = season)
+
+tune_spec <- linear_reg(penalty = tune(), mixture = 1) %>%
+  set_engine("glmnet")
+
+lambda_grid <- grid_regular(penalty(), levels = 50)
+
+#tune using grid
+doParallel::registerDoParallel()
+
+set.seed(2020)
+lasso_grid <- tune_grid(
+  wf %>% add_model(tune_spec),
+  resamples = office_boot,
+  grid = lambda_grid)
+
+#plot performance results with the regularization parameter
+
+lasso_grid %>%
+  collect_metrics() %>%
+  ggplot(aes(penalty, mean, color = .metric)) +
+  geom_errorbar(aes(
+    ymin = mean - std_err,
+    ymax = mean + std_err),
+  alpha = 0.5) +
+  geom_line(size = 1.5) +
+  facet_wrap(~.metric, scales = "free", nrow = 2) +
+  scale_x_log10() +
+  theme(legend.position = "none")
+
+# pick lowest rmse and finalise lasso
+
+lowest_rmse <- lasso_grid %>%
+  select_best("rmse", maximize = FALSE)
+
+final_lasso <- finalize_workflow(
+  wf %>% add_model(tune_spec),
+  lowest_rmse
+)
+
+#see the most important variables
+library(vip)
+
+final_lasso %>%
+  fit(office_train) %>%
+  pull_workflow_fit() %>%
+  vi(lambda = lowest_rmse$penalty) %>%
+  mutate(
+    Importance = abs(Importance),
+    Variable = fct_reorder(Variable, Importance)
+  ) %>%
+  ggplot(aes(x = Importance, y = Variable, fill = Sign)) +
+  geom_col() +
+  scale_x_continuous(expand = c(0, 0)) +
+  labs(y = NULL)
+
+#fit using test data
+last_fit(
+  final_lasso,
+  test_ml
+) %>%
+  collect_metrics()
+## # A tibble: 2 x 3
+##   .metric .estimator .estimate
+##   <chr>   <chr>          <dbl>
+## 1 rmse    standard       0.381
+## 2 rsq     standard       0.234
+
 ```
 
-### Need changes
-## Hedonic price function using post-LASSO and feature engineering
+# Artificial Neural Network (ANN)
 ```{r}
+
+ann_model <- train(
+  log_price ~ ., 
+  data = train_ml, 
+  method = "nnet", 
+  trControl = trainControl(method = "cv", number = 10), 
+  tuneLength = 10,
+  trace = FALSE # Set to TRUE for verbose output
+)
 
 ```
 
