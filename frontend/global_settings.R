@@ -1,5 +1,5 @@
-library('rgdal')
-library('spdplyr')
+# library('rgdal')
+# library('spdplyr')
 library('leaflet')
 library('htmltools')
 library('DT')
@@ -19,3 +19,10 @@ hospitals = read.csv("data/hospitals_geocode.csv")
 mrt = read.csv("data/hospitals_geocode.csv")
 pri_schs = read.csv("data/primary_schools_geocode.csv")
 supermarkets = read.csv("data/supermarkets_geocode.csv")
+median_resale_prices = read.csv("data/hdb_merged_no_transform.csv") %>%
+  select(`resale_price`, town, year, flat_type) %>%
+  filter(year == "2023") %>%
+  group_by(year, town, flat_type) %>%
+  summarise(median_price = median(resale_price))
+
+
