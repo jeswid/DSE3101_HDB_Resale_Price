@@ -53,6 +53,23 @@ validation_ml <- validation_data %>% mutate(log_price = log(resale_price)) %>%
 
 ## Benchmark OLS model
 ```{r}
+# Based on domain knowledge, we picked a few variables that affect HDB prices
+regfit = lm(formula= log_price ~ year + remaining_lease + floor_area_sqm + ave_storey +
+           + dist_to_nearest_mrt + dist_to_nearest_primary_schools + dist_cbd,data=train_ml)
+
+# Make predictions on the test data
+predictions_ols <- predict(regfit, newdata = test_ml)
+ 
+# Calculate RMSE
+rmse_ols <- sqrt(mean((test_ml$log_price - predictions_ols)^2))
+ 
+# Print RMSE
+print(paste("RMSE for benchmark OLS:", rmse_ols))
+
+summary(regfit)
+```
+## OLS on all variables
+```{r}
 # Perform linear regression on all the covariates in the training data
 model <- lm(log_price ~ ., data = train_ml)
  
@@ -171,8 +188,6 @@ for (i in seq_along(ntreev)) {
 # Select the number of trees with the lowest RMSE
 best_ntree <- ntreev[which.min(rmse_values)]
 print(paste("Best number of trees:", best_ntree))
-
-
 ```
 
 ### Model with tuned parameters
@@ -250,7 +265,6 @@ hyper_grid %>%
   arrange(rmse) %>%
   glimpse()
 ```
-
 
 ### Model with tuned parameters
 ```{r}
