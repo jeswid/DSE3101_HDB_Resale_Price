@@ -15,7 +15,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(plotly)
 library(lubridate)
-library(caret)
 library(httr) 
 library(jsonlite)
 library(car)
@@ -144,10 +143,14 @@ find_outliers <- function(data, threshold = 1.5) {
 #check for outliers
 outliers <- find_outliers(hdb_resale_cont)
 
-boxplot(hdb_resale$resale_price)
+box = boxplot(hdb_resale$log_resale_price)
+box 
+
+hdb_resale = hdb_resale %>%
+  select(-resale_price)
 
 # Testing for influential points
-C = cooks.distance(lm(resale_price~., data = hdb_resale_cont)) 
+C = cooks.distance(lm(log_resale_price~., data = hdb_resale)) 
 which(C>1)
 # No influential points found.
 ```
