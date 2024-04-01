@@ -1,12 +1,19 @@
-library(shiny)
-library(dplyr)
-require(pals)
-library(RColorBrewer)
+library('leaflet')
+library('htmltools')
+library('DT')
+library('dplyr')
+library('tidyr')
+library('ggplot2')
+library("htmltools")
+library('shiny')
+library('shinydashboard')
+library('leaflet')
+library('RColorBrewer')
 
 
 
 # Define server logic required to draw a histogram
-function(input, output, session) {
+shinyServer(function(input, output, session) {
   shinyjs::addClass(selector = "body", class = "sidebar-collapse")
   ######################## REACTIVE FUNCTION ###########################################################
   filteredData <- reactive({
@@ -36,35 +43,17 @@ function(input, output, session) {
 
   ################################## M A P   L A Y E R ########################################################
   # Create the map
-  # output$map <- renderLeaflet({
-  #   leaflet(SG_map) %>%
-  #     addTiles() %>%
-  #     addProviderTiles('OpenStreetMap') %>% 
-  #     addPolygons(weight = 1, smoothFactor = 0.5,
-  #                 opacity = 0, fillOpacity = 0,
-  #                 highlightOptions = highlightOptions(color = "white", weight = 2,
-  #                                                     bringToFront = TRUE),
-  #                 popup = paste(sep = "<br/>",
-  #                               paste0(all_address$town),
-  #                               round(median_resale_prices$median_price)))
-  # })
-  
-  # output$map <- renderLeaflet({
-  #   leaflet(all_address) %>%
-  #     setView(lng = 103.8198, lat = 1.3521, zoom = 12) %>%
-  #     setMaxBounds( lng1 = 103.600250,
-  #                   lat1 = 1.202674,
-  #                   lng2 = 104.027344,
-  #                   lat2 = 1.484121 ) %>%
-  #     addTiles(options=tileOptions(opacity=0.6))
-  # })
-  
   output$map = renderLeaflet({
     leaflet() %>% 
       addTiles () %>%
-      setView(lng = 103.8198, lat = 1.28, zoom = 10.5)
-      
+      setView(lng = 103.8198, lat = 1.28, zoom = 10.5)%>%
+      setMaxBounds( lng1 = 103.600250,
+                    lat1 = 1.202674,
+                    lng2 = 104.027344,
+                    lat2 = 1.484121 ) 
   })
+  
+  
 
   
   observeEvent(input$submit, {
@@ -79,5 +68,5 @@ function(input, output, session) {
   
   output$priceOutput <- renderText({ "Predicted price will be shown here." })
   
-}
+})
 
