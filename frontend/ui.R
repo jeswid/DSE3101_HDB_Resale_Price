@@ -1,5 +1,6 @@
 library(shiny)
 library(bslib)
+library(leaflet)
 
 
 pink_theme <- bs_theme(
