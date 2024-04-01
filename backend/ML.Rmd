@@ -113,6 +113,67 @@ for(i in 1:nset) {
 }
 # We pick ntree = 50 as our tuning parameter given the lowest RMSE
 ```
+### (alternative code for tuning with 10 fold CV)
+```{r}
+library(randomForest)
+
+# Define the number of trees to tune over
+ntreev <- c(30, 40, 50)
+
+# Number of folds for cross-validation
+nfolds <- 10
+
+# Initialize vector to store RMSE values
+rmse_values <- numeric(length(ntreev))
+
+# Loop over each number of trees
+for (i in seq_along(ntreev)) {
+  # Initialize vector to store RMSE values for this number of trees
+  rmse_values_cv <- numeric(nfolds)
+  
+  # Perform cross-validation
+  for (fold in 1:nfolds) {
+    # Split data into training and validation sets for this fold
+    fold_size <- nrow(validation_ml) / nfolds
+    fold_start <- (fold - 1) * fold_size + 1
+    fold_end <- fold * fold_size
+    
+    # Ensure indices are integers
+    validation_indices <- as.integer(fold_start:fold_end)
+    train_indices <- setdiff(1:nrow(validation_ml), validation_indices)
+    
+    # Train Random Forest model
+    rffit <- tryCatch(
+      randomForest(log_price ~ ., data = validation_ml[train_indices, ], ntree = ntreev[i], mtry = 138/3),
+      error = function(e) {
+        print(paste("Error in training Random Forest for fold", fold, "and ntree", ntreev[i], ":"))
+        print(e)
+        return(NULL)
+      }
+    )
+    
+    if (is.null(rffit)) next  # Skip to the next fold if training failed
+    
+    # Make predictions on validation set
+    predictions_rf <- predict(rffit, validation_ml[validation_indices, ], method = "anova")
+    
+    # Calculate RMSE
+    rmse_values_cv[fold] <- sqrt(mean((validation_ml$log_price[validation_indices] - predictions_rf)^2))
+  }
+  
+  # Take the average RMSE across all folds
+  rmse_values[i] <- mean(rmse_values_cv)
+  
+  # Print RMSE for this number of trees
+  print(paste("Average RMSE for Random Forest (trees:", ntreev[i], "):", rmse_values[i]))
+}
+
+# Select the number of trees with the lowest RMSE
+best_ntree <- ntreev[which.min(rmse_values)]
+print(paste("Best number of trees:", best_ntree))
+
+
+```
 
 ### Model with tuned parameters
 ```{r}
@@ -189,6 +250,8 @@ hyper_grid %>%
   arrange(rmse) %>%
   glimpse()
 ```
+
+
 ### Model with tuned parameters
 ```{r}
 xgb_train <- recipe(log_price ~ ., data = train_ml) %>%
@@ -226,133 +289,161 @@ vip::vip(xgb.fit)
 ```
 
 ### Need changes
-```{r}
 # Gradient Boosting Machine (GBM)
+```{r}
 # Load the gbm package
 library(gbm)
-library(caret)
 
-# Separate predictors (X) and response variable (Y)
-X <- subset(train_ml, select = -c(log_price)) 
+# Separate predictors (X) and response variable (Y) for validation set
+X_val <- subset(validation_ml, select = -c(log_price))
+Y_val <- validation_ml$log_price
 
-Y <- train_ml$log_price
+# Define the number of trees and interaction depth to tune over
+ntree_values <- c(50, 100, 150)  # Number of trees
+interaction_depth_values <- c(1, 3, 5)  # Interaction depth
 
-#tune number of trees and interaction depth using 10 fold CV
+# Number of folds for cross-validation
+nfolds <- 10
 
-# Train GBM model, need to tune the n.trees and interaction.depth
-gbm_model <- gbm(Y ~ ., data = X, distribution = "gaussian", n.trees = 100, interaction.depth = 3)
+# Initialize vector to store RMSE values
+rmse_values <- matrix(NA, nrow = length(ntree_values), ncol = length(interaction_depth_values),
+                      dimnames = list(ntree_values, interaction_depth_values))
 
-# Summary of the trained model
-summary(gbm_model)
+# Split validation set into folds
+validation_folds <- createFolds(1:nrow(validation_ml), k = nfolds)
 
-# Predictions on training data
-predictions_gbm <- predict(gbm_model, X, n.trees = 100, type = "response")
+# Loop over each combination of hyperparameters
+for (ntree in ntree_values) {
+  for (depth in interaction_depth_values) {
+    # Initialize vector to store RMSE values for this combination of hyperparameters
+    rmse_values_cv <- numeric(nfolds)
+    
+    # Perform cross-validation
+    for (fold in 1:nfolds) {
+      # Get training and validation indices for this fold
+      train_indices <- unlist(validation_folds[-fold])
+      validation_indices <- validation_folds[[fold]]
+      
+      # Train GBM model on validation data
+      gbm_model <- gbm(Y_val ~ ., data = X_val[train_indices, ], distribution = "gaussian",
+                       n.trees = ntree, interaction.depth = depth)
+      
+      # Make predictions on validation set
+      predictions_gbm <- predict(gbm_model, X_val[validation_indices, ], n.trees = ntree, type = "response")
+      
+      # Calculate RMSE
+      rmse_values_cv[fold] <- sqrt(mean((Y_val[validation_indices] - predictions_gbm)^2))
+    }
+    
+    # Take the average RMSE across all folds
+    rmse_values[as.character(ntree), as.character(depth)] <- mean(rmse_values_cv)
+  }
+}
 
-# Evaluate model performance (if needed)
-print(gbm_model)
+# Find the combination of hyperparameters with the lowest RMSE
+min_rmse_gbm <- min(rmse_values, na.rm = TRUE)
+best_ntree_gbm <- as.numeric(rownames(which(rmse_values == min_rmse, arr.ind = TRUE)))
+best_depth_gbm <- as.numeric(colnames(which(rmse_values == min_rmse, arr.ind = TRUE)))
 
+# Print the best hyperparameters and corresponding RMSE
+cat("Best number of trees for Gradient Boosting:", best_ntree, "\n")
+cat("Best interaction depth for Gradient Boosting:", best_depth, "\n")
+cat("Minimum RMSE for Gradient Boosting:", min_rmse, "\n")
+
+```
+
+# fit Gradient Boosting with optimal hyperparameters
+```{r}
+
+# Train GBM model on train data
+gbm_model_final <- gbm(Y ~ ., data = X, distribution = "gaussian",
+                       n.trees = best_ntree_gbm, interaction.depth = best_depth_gbm)
+      
+# Make predictions on test data
+predictions_gbm <- predict(gbm_model, (test_ml%>%select(-log_price)), n.trees = best_ntree_gbm, type = "response")
+      
 # Calculate RMSE
 rmse_gbm <- sqrt(mean((test_ml$log_price - predictions_gbm)^2))
- 
-# Print RMSE
-print(paste("RMSE for Gradient Boosting Model:", rmse_gbm))
+
 ```
 
 
-### Need changes
 ## Hedonic price function using post-LASSO and feature engineering
+
+# ML model
 ```{r}
-library(tidymodels)
-library(tidyverse)
-library(mlbench)
+# Load required packages
+library(glmnet)
 
-#define pre-processing of data using the recipe package
-rec <- recipe(log_price ~ ., data = train_ml)
 
-lasso_mod <- linear_reg(mode = "regression",
-                        penalty = tune(),
-                        mixture = 1) %>% 
-  set_engine("glmnet")
+# Separate predictors (X) and response variable (Y)
+X <- as.matrix(subset(train_ml, select = -c(log_price)))
+Y <- train_ml$log_price
 
-wf <- workflow() %>%
-  add_model(lasso_mod) %>%
-  add_recipe(rec) %>%
-  fit(data = train_ml)
+# create X and Y for tuning hyperparameter using 10-fold CV
+X_val <- as.matrix(subset(validation_ml, select = -c(log_price)))
+Y_val <- validation_ml$log_price
 
-lasso_fit <- wf %>% pull_workflow_fit() %>%
-  tidy()
+# Tune complexity parameter lambda with ten-fold cross-validation
+lambda_values <- 10^seq(-1, 1, by = 0.1)  # Range of lambda values to tune over
 
-#tuning using bootstrap
-set.seed(1234)
-office_boot <- bootstraps(validation_ml, strata = season)
+# Initialize variables to store the best lambda and its corresponding performance
+best_lambda <- 0
+best_performance <- Inf  # Initialize with a very high value for minimization problems
 
-tune_spec <- linear_reg(penalty = tune(), mixture = 1) %>%
-  set_engine("glmnet")
+# Iterate over lambda values
+for (lambda in lambda_values) {
+  # Fit Lasso regression model
+  glmnet_model <- glmnet(X, Y, alpha = 1, lambda = lambda, standardize = TRUE)
+  
+  # Perform ten-fold cross-validation
+  cv_fit <- cv.glmnet(X_val, Y_val, alpha = 1, lambda = lambda_values, standardize = TRUE, nfolds = 10)
+  
+  # Extract mean squared error (or other performance metric) from cross-validation results
+  mean_mse <- min(cv_fit$cvm)
+  
+  # Check if the current performance is better than the best performance so far
+  if (mean_mse < best_performance) {
+    best_performance <- mean_mse
+    best_lambda <- lambda
+  }
+}
 
-lambda_grid <- grid_regular(penalty(), levels = 50)
+# Print the best lambda
+print(best_lambda)
 
-#tune using grid
-doParallel::registerDoParallel()
+# Extract optimal lambda
+optimal_lambda <- best_lambda
 
-set.seed(2020)
-lasso_grid <- tune_grid(
-  wf %>% add_model(tune_spec),
-  resamples = office_boot,
-  grid = lambda_grid)
+```
 
-#plot performance results with the regularization parameter
+# Optimal Post Lasso using optimal lambda
+```{r}
 
-lasso_grid %>%
-  collect_metrics() %>%
-  ggplot(aes(penalty, mean, color = .metric)) +
-  geom_errorbar(aes(
-    ymin = mean - std_err,
-    ymax = mean + std_err),
-  alpha = 0.5) +
-  geom_line(size = 1.5) +
-  facet_wrap(~.metric, scales = "free", nrow = 2) +
-  scale_x_log10() +
-  theme(legend.position = "none")
+# Fit LASSO regression model
+lasso_model <- glmnet(x = as.matrix(X), y = Y, alpha = 1, lambda = optimal_lambda, standardize = TRUE)
 
-# pick lowest rmse and finalise lasso
+# Extract selected variables with non-zero coefficients
+feature_names <- coef(lasso_model)
 
-lowest_rmse <- lasso_grid %>%
-  select_best("rmse", maximize = FALSE)
+selected_vars <- feature_names@Dimnames[[1]][-1]
 
-final_lasso <- finalize_workflow(
-  wf %>% add_model(tune_spec),
-  lowest_rmse
-)
+data = data.frame(Y, train_ml%>%select(selected_vars))
 
-#see the most important variables
-library(vip)
+# Fit OLS regression model using selected variables
+plasso <- lm(Y ~ ., data = data)
 
-final_lasso %>%
-  fit(office_train) %>%
-  pull_workflow_fit() %>%
-  vi(lambda = lowest_rmse$penalty) %>%
-  mutate(
-    Importance = abs(Importance),
-    Variable = fct_reorder(Variable, Importance)
-  ) %>%
-  ggplot(aes(x = Importance, y = Variable, fill = Sign)) +
-  geom_col() +
-  scale_x_continuous(expand = c(0, 0)) +
-  labs(y = NULL)
+# Make predictions on the test data
+predictions_plasso <- predict(plasso, newdata = test_ml)
+ 
+# Calculate RMSE
+rmse_plasso <- sqrt(mean((test_ml$log_price - predictions_plasso)^2))
+ 
+# Print RMSE
+print(paste("RMSE for hedonic Post Lasso OLS:", rmse_plasso))
 
-#fit using test data
-last_fit(
-  final_lasso,
-  test_ml
-) %>%
-  collect_metrics()
-
-## # A tibble: 2 x 3
-##   .metric .estimator .estimate
-##   <chr>   <chr>          <dbl>
-## 1 rmse    standard       0.381
-## 2 rsq     standard       0.234
-
+#model summary
+summary(plasso)
 ```
 
 # Artificial Neural Network (ANN)
