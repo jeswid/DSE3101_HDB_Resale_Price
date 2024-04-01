@@ -1,5 +1,6 @@
 library(shiny)
 library(bslib)
+library(leaflet)
 
 
 pink_theme <- bs_theme(
@@ -53,7 +54,8 @@ ui <- fluidPage(
       mainPanel(
         tabsetPanel(
           tabPanel("Home",textOutput("homeOutput")),
-          tabPanel("Geospatial Analysis ", textOutput("geoOutput")),
+          tabPanel("Geospatial Analysis ", textOutput("geoOutput"), 
+                   leafletOutput("map",width = "100%", height = 400)),
           tabPanel("Predicted Price", textOutput("priceOutput"))
         )
       )

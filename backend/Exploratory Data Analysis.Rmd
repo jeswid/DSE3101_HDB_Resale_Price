@@ -90,8 +90,6 @@ ggplot(hdb_resale, aes(x = log_resale_price)) +
        x = "Log(Resale Price)",
        y = "Frequency") +
   theme_minimal()
-
-
 ```
 
 # Distributions of the regressors
@@ -117,37 +115,6 @@ plot_histograms <- function(data) {
 histogram_plots <- plot_histograms(numeric_vars)
 
 histogram_plots
-```
-
-## Plot a barplot of median prices in each town
-```{r}
-# plot median HDB resale prices by town, facet wrap by other categories
-
-#read in non transformed data
-hdb_ori <- read.csv("processed_data/hdb_merged_no_transform.csv")
-
-# Calculate median resale price by town
-median_prices <- aggregate(resale_price ~ town, hdb_ori, median)
-
-# Reorder town based on median resale prices (from highest to lowest)
-hdb_ori$town <- factor(hdb_ori$town, levels = median_prices[order(median_prices$resale_price, decreasing = TRUE), "town"])
-
-# Create another column called median_prices
-# Calculate median resale price for each town
-median_prices <- hdb_ori %>%
-  group_by(town) %>%
-  summarise(median_price = median(resale_price, na.rm = TRUE))
-
-median_prices$town <- reorder(median_prices$town, -median_prices$median_price)
-
-# Plot barplot of median prices vs. town and facet wrap by flat_type
-ggplot(median_prices, aes(x = town, y = median_price)) +
-  geom_bar(stat = "identity", fill = "skyblue") +
-  labs(title = "Median HDB Resale Prices by Town",
-       x = "Town",
-       y = "Median Resale Price (SGD)") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 7))
-
 ```
 
 ### check for outliers
@@ -176,4 +143,41 @@ find_outliers <- function(data, threshold = 1.5) {
 
 #check for outliers
 outliers <- find_outliers(hdb_resale_cont)
+
+boxplot(hdb_resale$resale_price)
+
+# Testing for influential points
+C = cooks.distance(lm(resale_price~., data = hdb_resale_cont)) 
+which(C>1)
+# No influential points found.
+```
+
+## Plot a barplot of median prices in each town
+```{r}
+# plot median HDB resale prices by town, facet wrap by other categories
+
+#read in non transformed data
+hdb_ori <- read.csv("processed_data/hdb_merged_no_transform.csv") %>% select(-1)
+
+# Calculate median resale price by town
+median_prices <- aggregate(resale_price ~ town, hdb_ori, median)
+
+# Reorder town based on median resale prices (from highest to lowest)
+hdb_ori$town <- factor(hdb_ori$town, levels = median_prices[order(median_prices$resale_price, decreasing = TRUE), "town"])
+
+# Create another column called median_prices
+# Calculate median resale price for each town
+median_prices <- hdb_ori %>%
+  group_by(town) %>%
+  summarise(median_price = median(resale_price, na.rm = TRUE))
+
+median_prices$town <- reorder(median_prices$town, -median_prices$median_price)
+
+# Plot barplot of median prices vs. town and facet wrap by flat_type
+ggplot(median_prices, aes(x = town, y = median_price)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Median HDB Resale Prices by Town",
+       x = "Town",
+       y = "Median Resale Price (SGD)") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 7))
 ```
