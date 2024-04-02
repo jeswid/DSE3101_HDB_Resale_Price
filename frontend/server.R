@@ -62,57 +62,63 @@ shinyServer(function(input, output, session) {
       addPopups(lng = click$lng, lat = click$lat, content)
   })
   
+  observe({
+    # Assuming there's a way for your app to know it's currently showing the geopartial tab
+    # This could be an input from the UI indicating the active tab
+    if(current_tab == 'GeospartialAnalysis') {
+      selected_info <- paste("Geopartial Selection:", input$addressM) # Update based on actual inputs
+      output$geoSelectionOutput <- renderText({ selected_info })
+    }
+  })
   
-  # When map is clicked, show a popup with city info
+  # Update for Predicted Price tab selection
+  observeEvent(input$submit, {
+    # Assuming the submit action is relevant for the predicted price calculation
+    if(current_tab == 'PredictedPrice') {
+      selected_info <- paste("Predicted Price Selection:",
+                             input$address, input$town, input$flat_model, input$flat_type, sep = "\n")
+      output$priceSelectionOutput <- renderText({ selected_info })
+    }
+  })
   
-  # observe({
-  # click <- input$map_click
-  # if(is.null(click)) return()  # Exit if no click yet
-  #   
-  #   # Determine the content of the popup based on the clicked location
-  #   # For demonstration, simply showing the coordinates
-  #   content <- as.character(tagList(
-  #     tags$h4("town of selected house:", all_address$town), tags$br(),
-  #     sprintf("Mrt within 1km: %s", as.integer( all_address$mrt_1km)), tags$br(),
-  #     sprintf("Primary schools within 1km: %s%%", as.integer( all_address$primary_schools_1km)), tags$br(),
-  #     sprintf("Hawker centres within 1km", as.integer( all_address$hawkers_1km))))
-  #   
-  #   # Update the map with a popup at the clicked location
-  # leafletProxy("map") %>%
-  #   clearPopups() %>%  # Clear existing popups
-  #   addPopups(lng = click$lng, lat = click$lat, popupContent)
+})
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  # output$geoOutput <- renderText({ "Map will be displayed here." })
+  # output$priceOutput <- renderText({ "Predicted price will be shown here." })
+  # 
+  # observeEvent(input$submit, {
+  #   # This is where you can process the inputs and update the outputs.
+  #   # For example:
+  #   output$homeOutput <- renderText({
+  #     #make the chosen into a box instead of a line
+  #     paste("You have selected:", input$address, input$town, input$flat_model)
+  #   })
   # })
-  
-  output$geoOutput <- renderText({ "Map will be displayed here." })
-  output$priceOutput <- renderText({ "Predicted price will be shown here." })
-  
-  observeEvent(input$submit, {
-    # This is where you can process the inputs and update the outputs.
-    # For example:
-    output$homeOutput <- renderText({
-      #make the chosen into a box instead of a line
-      paste("You have selected:", input$address, input$town, input$flat_model)
-    })
-  })
-  output$geoOutput <- renderText({ "Map will be displayed here." })
-  
-  observeEvent(input$submit, {
-    # Construct the text with the selected inputs
-    output$priceOutput <- renderText({
-      paste("You have selected:", 
-            input$address, 
-            input$town, 
-            input$flat_model, 
-            input$flat_type, 
-            input$amenities, 
-            sep = "\n")
-    })
-    
-    
-     # Separate items by a new line
-  })
-  })
-  
-  
-
-  
+  # output$geoOutput <- renderText({ "Map will be displayed here." })
+  # 
+  # observeEvent(input$submit, {
+  #   # Construct the text with the selected inputs
+  #   output$priceOutput <- renderText({
+  #     paste("You have selected:", 
+  #           input$address,input$town,input$flat_model,input$flat_type, input$amenities, sep = "\n") })
+  #   
+  #   
+  #    # Separate items by a new line
+  # })
+  # 
+  # })
+  # 
+  # 
+  # 
+  # 
