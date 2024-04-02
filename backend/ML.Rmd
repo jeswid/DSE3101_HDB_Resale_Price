@@ -221,7 +221,7 @@ predictions_bag <- predict(bagfit, test_ml, method = "anova")
 rmse_bag <- sqrt(mean((test_ml$log_price - predictions_bag)^2)) 
 
 # Print RMSE 
-print(paste("RMSE for Random Forest:", rmse_rt))
+print(paste("RMSE for Bagging:", rmse_bag))
 ```
 
 
@@ -249,7 +249,13 @@ for (ntree in ntree_values) {
     # Evaluate performance (you can use different metrics here)
     # For example, you might want to use mean squared error from cross-validation
     performance <- gbm.perf(gbm_model, method = "cv")
-    mse_cv <- performance$cv.error[gbm_model$best.t]
+    
+    #pdf("gbm_performance_plot.pdf")
+    print(perf_plot)
+    #dev.off()
+    
+    # Manually calculate cross-validation error
+    mse_cv <- gbm_model$cv.error[gbm_model$best.t]
     
     # Update best parameters if performance is improved
     if (mse_cv < best_performance) {
@@ -268,6 +274,7 @@ cat("Best cross-validated MSE:", best_performance, "\n")
 
 
 ```
+
 # fit Traditional Gradient Boosting with optimal hyperparameters
 ```{r}
 
