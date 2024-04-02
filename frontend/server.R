@@ -62,23 +62,18 @@ shinyServer(function(input, output, session) {
       addPopups(lng = click$lng, lat = click$lat, content)
   })
   
-  observe({
-    # Assuming there's a way for your app to know it's currently showing the geopartial tab
-    # This could be an input from the UI indicating the active tab
-    if(current_tab == 'GeospartialAnalysis') {
-      selected_info <- paste("Geopartial Selection:", input$addressM) # Update based on actual inputs
-      output$geoSelectionOutput <- renderText({ selected_info })
-    }
+  observeEvent(input$submitgeo, {
+    # Assuming you want to display some details based on geospatial analysis inputs
+    output$geoSelectionOutput <- renderText({
+      paste("Geospatial Selection:", input$addressM, input$townM, input$flat_modelM, input$flat_typeM, input$amenitiesM, sep = "\n")
+    })
   })
   
-  # Update for Predicted Price tab selection
-  observeEvent(input$submit, {
-    # Assuming the submit action is relevant for the predicted price calculation
-    if(current_tab == 'PredictedPrice') {
-      selected_info <- paste("Predicted Price Selection:",
-                             input$address, input$town, input$flat_model, input$flat_type, sep = "\n")
-      output$priceSelectionOutput <- renderText({ selected_info })
-    }
+  observeEvent(input$submitprice, {
+    # Assuming you want to display some details based on predicted price inputs
+    output$priceOutput <- renderText({
+      paste("Predicted Price Selection:", input$address, input$town, input$flat_model, input$flat_type, input$amenities, sep = "\n")
+    })
   })
   
 })
