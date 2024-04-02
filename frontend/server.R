@@ -62,10 +62,10 @@ shinyServer(function(input, output, session) {
       addPopups(lng = click$lng, lat = click$lat, content)
   })
   
-  observeEvent(input$submitgeo, {
+  observeEvent(input$submitmap, {
     # Assuming you want to display some details based on geospatial analysis inputs
     output$geoSelectionOutput <- renderText({
-      paste("Geospatial Selection:", input$addressM, input$townM, input$flat_modelM, input$flat_typeM, input$amenitiesM, sep = "\n")
+      paste("Geospatial Selection:", input$address, input$town, input$flat_model, input$flat_type, input$amenitiesM, sep = "\n")
     })
   })
   
@@ -81,12 +81,7 @@ shinyServer(function(input, output, session) {
   
   
   
-  
-  
-  
-  
-  
-  
+
   
   
   # output$geoOutput <- renderText({ "Map will be displayed here." })
