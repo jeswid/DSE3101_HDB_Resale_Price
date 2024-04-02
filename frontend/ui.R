@@ -31,7 +31,7 @@ ui <- fluidPage(
     tabPanel("Geospatial Analysis", value = "GeospatialAnalysis",
              fluidRow(
                column(12,
-                      textOutput("geoSelectionOutput"))
+                      textOutput("geoSelectionOutput")),
                column(9,
                       leafletOutput("map", width = "100%", height = "600px") # Map output
                ),
