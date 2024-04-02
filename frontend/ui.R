@@ -48,6 +48,7 @@ ui <- fluidPage(
                           selectInput("amenities", "Amenities", choices = c("Primary School", "Shopping Centre", "Food Court", "Gym", "Community Center", "Junior College"), selected = "Primary School"),
                           actionButton("submit", "Submit HDB 🔎", class = "btn-primary") ) ), ) ),
     tabPanel("Predicted Price", value = "PredictedPrice",
+             
              fluidRow(
                column(12,
                       # Content for Predicted Price tab
@@ -62,7 +63,8 @@ ui <- fluidPage(
                                       selected = "Model A"),
                           selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
                           selectInput("amenities", "Amenities", choices = c("Primary School", "Shopping Centre", "Food Court", "Gym", "Community Center", "Junior College"), selected = "Primary School"),
-                          actionButton("submit", "Submit HDB 🔎", class = "btn-primary") )), ))
+                          actionButton("submit", "Submit HDB 🔎", class = "btn-primary") )),
+    verbatimTextOutput("priceOutput") ))
 
   
 

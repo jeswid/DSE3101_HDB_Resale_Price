@@ -36,37 +36,52 @@ shinyServer(function(input, output, session) {
       setMaxBounds(lng1 = 103.600250, lat1 = 1.202674, lng2 = 104.027344, lat2 = 1.484121)
   })
   
-  
-  # showZipcodePopup <- function(zipcode, lat, lng) {
-  #   selectedZip <- all_address[all_address$postal == zipcode,]
-  #   content <- as.character(tagList(
-  #     tags$h4("town of selected house:", selectedZip$town), tags$br(),
-  #     sprintf("Mrt within 1km: %s", as.integer(selectedZip$mrt_1km)), tags$br(),
-  #     sprintf("Primary schools within 1km: %s%%", as.integer(selectedZip$primary_schools_1km)), tags$br(),
-  #     sprintf("Hawker centres within 1km", as.integer(selectedZip$hawkers_1km))
-  #   ))
-  #   leafletProxy("map") %>% addPopups(lng, lat, content, layerId = zipcode)
-  # }
-  
-  # When map is clicked, show a popup with city info
+  findRegion <- function(lat, lng) {
+    distances <- sqrt((all_address$lat - lat)^2 + (all_address$lng - lng)^2)
+    closest_index <- which.min(distances)
+    closest_region <- all_address[closest_index, ]
+    return(closest_region)
+  }
   
   observe({
     click <- input$map_click
-    if(is.null(click)) return()  # Exit if no click yet
+    if(is.null(click)) return()
     
-    # Determine the content of the popup based on the clicked location
-    # For demonstration, simply showing the coordinates
+    clicked_region <- findRegion(click$lat, click$lng)
+    if(is.null(clicked_region)) return()
+    
     content <- as.character(tagList(
-      tags$h4("town of selected house:", all_address$town), tags$br(),
-      sprintf("Mrt within 1km: %s", as.integer( all_address$mrt_1km)), tags$br(),
-      sprintf("Primary schools within 1km: %s%%", as.integer( all_address$primary_schools_1km)), tags$br(),
-      sprintf("Hawker centres within 1km", as.integer( all_address$hawkers_1km))))
+      tags$h4("Town of selected house:", clicked_region$town),
+      sprintf("Mrt within 1km: %s%", as.integer(clicked_region$mrt_1km)),
+      sprintf("Primary schools within 1km: %s%", as.integer(clicked_region$primary_schools_1km)), 
+      sprintf("Hawker centres within 1km: %s", as.integer(clicked_region$hawkers_1km))
+    ))
     
-    # Update the map with a popup at the clicked location
     leafletProxy("map") %>%
       clearPopups() %>%  # Clear existing popups
-      addPopups(lng = click$lng, lat = click$lat, popupContent)
+      addPopups(lng = click$lng, lat = click$lat, content)
   })
+  
+  
+  # When map is clicked, show a popup with city info
+  
+  # observe({
+  # click <- input$map_click
+  # if(is.null(click)) return()  # Exit if no click yet
+  #   
+  #   # Determine the content of the popup based on the clicked location
+  #   # For demonstration, simply showing the coordinates
+  #   content <- as.character(tagList(
+  #     tags$h4("town of selected house:", all_address$town), tags$br(),
+  #     sprintf("Mrt within 1km: %s", as.integer( all_address$mrt_1km)), tags$br(),
+  #     sprintf("Primary schools within 1km: %s%%", as.integer( all_address$primary_schools_1km)), tags$br(),
+  #     sprintf("Hawker centres within 1km", as.integer( all_address$hawkers_1km))))
+  #   
+  #   # Update the map with a popup at the clicked location
+  # leafletProxy("map") %>%
+  #   clearPopups() %>%  # Clear existing popups
+  #   addPopups(lng = click$lng, lat = click$lat, popupContent)
+  # })
   
   output$geoOutput <- renderText({ "Map will be displayed here." })
   output$priceOutput <- renderText({ "Predicted price will be shown here." })
@@ -76,11 +91,27 @@ shinyServer(function(input, output, session) {
     # For example:
     output$homeOutput <- renderText({
       #make the chosen into a box instead of a line
-      paste("You have selected:", input$flat_address, input$town, input$flat_model, input$flat_type, input$floor_area, input$storey, input$lease_commence_date)
+      paste("You have selected:", input$address, input$town, input$flat_model)
     })
   })
   output$geoOutput <- renderText({ "Map will be displayed here." })
   
-  output$priceOutput <- renderText({ "Predicted price will be shown here." })
+  observeEvent(input$submit, {
+    # Construct the text with the selected inputs
+    output$priceOutput <- renderText({
+      paste("You have selected:", 
+            input$address, 
+            input$town, 
+            input$flat_model, 
+            input$flat_type, 
+            input$amenities, 
+            sep = "\n")
+    })
+    
+    
+     # Separate items by a new line
+  })
+  
+
   
 })
