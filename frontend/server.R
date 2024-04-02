@@ -111,7 +111,8 @@ shinyServer(function(input, output, session) {
     
      # Separate items by a new line
   })
+  })
+  
   
 
   
-})
