@@ -1,64 +1,107 @@
 library(shiny)
-library(bslib)
 library(leaflet)
 
-
-pink_theme <- bs_theme(
-  bg = "#343a40", # Background color
-  fg = "#f8f9fa", # Foreground text color
-  primary = "#f8d7da", # Primary color (a bright pink)
-  secondary = "#f8d7da", # Secondary color (a softer pink)
-  success = "#d4edda", # Success color
-  info = "#d1ecf1", # Info color
-  warning = "#fff3cd", # Warning color
-  danger = "#f8d7da", # Danger color
-  dark = "#343a40", # Dark color
-  light = "#f8f9fa", # Light color
-  "navbar-bg" = "#d1ecf1", # Navbar background color
-  "navbar-fg" = "#ffffff", # Navbar foreground color
-  "btn-border-radius" = "0.25rem" # Button border radius
+custom_css <- HTML(
+  "<style>
+    /* General Sidebar Styles */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+      padding: 20px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      background-color: #343a40;
+      color: #f8f9fa;
+      width: 250px;
+    }
+    
+    .sidebar .sidebar-sticky {
+      position: relative;
+      top: 0;
+      height: calc(100vh - 48px);
+      padding-top: 0.5rem;
+    }
+    
+    /* Navigation Item Styles */
+    .sidebar .nav .nav-item {
+      font-weight: bold;
+      color: #f8f9fa;
+    }
+    
+    .sidebar .nav .nav-item .nav-link {
+      border-radius: 0;
+    }
+    
+    .sidebar .nav .nav-item .nav-link.active {
+      background-color: #495057;
+    }
+    
+    /* Input and Button Styles */
+    .form-control, .btn {
+      border-radius: 0.25rem;
+      margin-bottom: 10px;
+    }
+    
+    .form-control {
+      background-color: #ffffff;
+      color: #495057;
+    }
+    
+    .btn {
+      color: #f8f9fa;
+      background-color: #007bff;
+      border-color: #007bff;
+      margin-top: 5px;
+      width: 100%;
+    }
+  </style>"
 )
-
 
 
 ui <- fluidPage(
-  theme = pink_theme,
-  navbarPage(
-    titlePanel("Visualizing and Predicting Singapore HDB Resale Prices"),
-    
-    sidebarLayout(
-      sidebarPanel(
-        textInput("flat_address", "Flat Address or Postal Code", value = "988B BUANGKOK GREEN"),
-        selectInput("town", "Town", choices = c('ANG MO KIO', 'BEDOK', 'BISHAN', 'BUKIT BATOK', 'BUKIT MERAH',
-                                                'BUKIT TIMAH', 'CENTRAL AREA', 'CHOA CHU KANG', 'CLEMENTI',
-                                                'GEYLANG', 'HOUGANG', 'JURONG EAST', 'JURONG WEST',
-                                                'KALLANG/WHAMPOA', 'MARINE PARADE', 'QUEENSTOWN', 'SENGKANG',
-                                                'SERANGOON', 'TAMPINES', 'TOA PAYOH', 'WOODLANDS', 'YISHUN',
-                                                'LIM CHU KANG', 'SEMBAWANG', 'BUKIT PANJANG', 'PASIR RIS', 'PUNGGOL'), 
-                    selected = "SERANGOON"),
-        selectInput("flat_model", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
-                                                            'New Generation', 'Maisonette', 'Apartment', 'Simplified',
-                                                            'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
-                                                            '2-room', 'Executive Maisonette', 'Type S1S2'), 
-                    selected = "Model A"),
-        selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
-        sliderInput("floor_area", "Floor Area (sqm)", min = 34, max = 280, value = 93),
-        selectInput("amenities", "Amenities", choices = c("Primary School", "Shopping Centre", "Food Court", "Gym", "Community Center", "Junior College"), selected = "Primary School"),
-        selectInput("storey", "Storey", choices = c('01 TO 03', '04 TO 06', '07 TO 09', '10 TO 12', '13 TO 15',
-                                                    '16 TO 18', '19 TO 21', '22 TO 24', '25 TO 27', '28 TO 30',
-                                                    '31 TO 33', '34 TO 36', '37 TO 39', '40 TO 42', '43 TO 45',
-                                                    '46 TO 48', '49 TO 51'), selected = "07 TO 09"),
-        actionButton("submit", "Submit HDB 🔎")
+  tags$head(custom_css),
+  div(id = "wrapper",
+      # Custom Sidebar
+      div(class = "sidebar bg-dark",
+          div(class = "sidebar-sticky",
+              h4("Inputs", class = "sidebar-heading"),
+              textInput("flat_address", "Flat Address or Postal Code", value = "988B BUANGKOK GREEN"),
+              selectInput("town", "Town", choices = c('ANG MO KIO', 'BEDOK', 'BISHAN', 'BUKIT BATOK', 'BUKIT MERAH',
+                                                      'BUKIT TIMAH', 'CENTRAL AREA', 'CHOA CHU KANG', 'CLEMENTI',
+                                                      'GEYLANG', 'HOUGANG', 'JURONG EAST', 'JURONG WEST',
+                                                      'KALLANG/WHAMPOA', 'MARINE PARADE', 'QUEENSTOWN', 'SENGKANG',
+                                                      'SERANGOON', 'TAMPINES', 'TOA PAYOH', 'WOODLANDS', 'YISHUN',
+                                                      'LIM CHU KANG', 'SEMBAWANG', 'BUKIT PANJANG', 'PASIR RIS', 'PUNGGOL'), 
+                          selected = "SERANGOON"),
+              selectInput("flat_model", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
+                                                                  'New Generation', 'Maisonette', 'Apartment', 'Simplified',
+                                                                  'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
+                                                                  '2-room', 'Executive Maisonette', 'Type S1S2'), 
+                          selected = "Model A"),
+              selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
+              selectInput("amenities", "Amenities", choices = c("Primary School", "Shopping Centre", "Food Court", "Gym", "Community Center", "Junior College"), selected = "Primary School"),
+              actionButton("submit", "Submit HDB 🔎", class = "btn-primary")
+          )
       ),
-      
-      mainPanel(
-        tabsetPanel(
-          tabPanel("Home",textOutput("homeOutput")),
-          tabPanel("Geospatial Analysis ", textOutput("geoOutput"), 
-                   leafletOutput("map",width = "100%", height = 400)),
-          tabPanel("Predicted Price", textOutput("priceOutput"))
-        )
+      # Page Content
+      div(class = "page-content-wrapper",
+          fluidRow(
+            column(10, offset = 3,
+                   tabsetPanel(
+                     id = "main-tabs",
+                     tabPanel("Home", textOutput("homeOutput")),
+                     tabPanel("Geospatial Analysis", textOutput("geoOutput"), leafletOutput("map", width = "100%", height = "400px")),
+                     tabPanel("Predicted Price", textOutput("priceOutput"))
+                     # ... Add more tabs here
+                   )
+            )
+          )
       )
-    )
   )
 )
+
+
+

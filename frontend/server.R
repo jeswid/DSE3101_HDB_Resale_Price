@@ -1,60 +1,75 @@
-library('leaflet')
-library('htmltools')
-library('DT')
-library('dplyr')
-library('tidyr')
-library('ggplot2')
-library("htmltools")
-library('shiny')
-library('shinydashboard')
-library('leaflet')
-library('RColorBrewer')
+library(shiny)
+library(shinyjs)
+library(leaflet)
+library(dplyr)
 
-
-
-# Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
   shinyjs::addClass(selector = "body", class = "sidebar-collapse")
-  ######################## REACTIVE FUNCTION ###########################################################
+  
+  # Assuming all_address is a data frame with your data
+  # Example for all_address
+  # all_address <- data.frame(lat = runif(10, min = 1.2, max = 1.5),
+  #                           long = runif(10, min = 103.6, max = 104),
+  #                           town = LETTERS[1:10])
+  
+  # Reactive expression for filtered data
   filteredData <- reactive({
     all_address %>%
-      filter(mrt == all_address$`mrt_1km`, 
-             hawkers == alladress$`hawkers_1km`, 
-             schs == alladdress$`primary_schools_1km`, 
-             hospitals == alladress$`hospitals_1km`,
+      filter(mrt == all_address$mrt_1km, 
+             hawkers == alladress$hawkers_1km, 
+             schs == alladdress$primary_schools_1km, 
+             hospitals == alladress$hospitals_1km,
              town == alladdress$street
-             )
-    })
+      )
+  })
   
+  # Color palette reactive (example logic)
   colorpal <- reactive({
-  colorNumeric(input$colors, median_resale_prices$median_price)
+    colorNumeric("RdYlBu", domain = filteredData()$some_value)
   })
   
-  filteredhawkers <- reactive({
-    hawker_centres %>% 
-      filter(., Year == input$yr, ENAME == input$dist_id)
-  })
-  
-  filteredhosp <- reactive({
-    hospitals %>% 
-      filter(., Year == input$yr, ENAME == input$dist_id)
-  })
-  
-
-  ################################## M A P   L A Y E R ########################################################
-  # Create the map
-  output$map = renderLeaflet({
+  # Initial map creation without markers
+  output$map <- renderLeaflet({
     leaflet() %>% 
-      addTiles () %>%
-      setView(lng = 103.8198, lat = 1.28, zoom = 10.5)%>%
-      setMaxBounds( lng1 = 103.600250,
-                    lat1 = 1.202674,
-                    lng2 = 104.027344,
-                    lat2 = 1.484121 ) 
+      addTiles() %>%
+      setView(lng = 103.8198, lat = 1.28, zoom = 10.5) %>%
+      setMaxBounds(lng1 = 103.600250, lat1 = 1.202674, lng2 = 104.027344, lat2 = 1.484121)
   })
   
   
-
+  # showZipcodePopup <- function(zipcode, lat, lng) {
+  #   selectedZip <- all_address[all_address$postal == zipcode,]
+  #   content <- as.character(tagList(
+  #     tags$h4("town of selected house:", selectedZip$town), tags$br(),
+  #     sprintf("Mrt within 1km: %s", as.integer(selectedZip$mrt_1km)), tags$br(),
+  #     sprintf("Primary schools within 1km: %s%%", as.integer(selectedZip$primary_schools_1km)), tags$br(),
+  #     sprintf("Hawker centres within 1km", as.integer(selectedZip$hawkers_1km))
+  #   ))
+  #   leafletProxy("map") %>% addPopups(lng, lat, content, layerId = zipcode)
+  # }
+  
+  # When map is clicked, show a popup with city info
+  
+  observe({
+    click <- input$map_click
+    if(is.null(click)) return()  # Exit if no click yet
+    
+    # Determine the content of the popup based on the clicked location
+    # For demonstration, simply showing the coordinates
+    content <- as.character(tagList(
+      tags$h4("town of selected house:", all_address$town), tags$br(),
+      sprintf("Mrt within 1km: %s", as.integer( all_address$mrt_1km)), tags$br(),
+      sprintf("Primary schools within 1km: %s%%", as.integer( all_address$primary_schools_1km)), tags$br(),
+      sprintf("Hawker centres within 1km", as.integer( all_address$hawkers_1km))))
+    
+    # Update the map with a popup at the clicked location
+    leafletProxy("map") %>%
+      clearPopups() %>%  # Clear existing popups
+      addPopups(lng = click$lng, lat = click$lat, popupContent)
+  })
+  
+  output$geoOutput <- renderText({ "Map will be displayed here." })
+  output$priceOutput <- renderText({ "Predicted price will be shown here." })
   
   observeEvent(input$submit, {
     # This is where you can process the inputs and update the outputs.
@@ -69,4 +84,3 @@ shinyServer(function(input, output, session) {
   output$priceOutput <- renderText({ "Predicted price will be shown here." })
   
 })
-
