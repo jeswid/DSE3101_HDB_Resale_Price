@@ -117,7 +117,7 @@ library(randomForest)
 # Now try the Random forest. To go from bagging to proper random forest, we 
 # need to add the option mtry - number of predictors randomly sampled for each tree: 
 # Here we set mtry= P/3 to reflect the default choice of P/3 for regression problems. 
-ntreev = c(30,40,50)
+ntreev = c(500, 1000)
 
 nset = length(ntreev) #number of cases for tree numbers - will determine number of iterations in the loop
 
@@ -128,8 +128,10 @@ for(i in 1:nset) {
   rmse_rt <- sqrt(mean((test_ml$log_price - predictions_rf)^2)) 
   print(paste("RMSE for Random Forest:","(trees:", ntreev[i],")", rmse_rt))
 }
-# We pick ntree = 50 as our tuning parameter given the lowest RMSE
+# We pick ntree = 1000 as our tuning parameter given the lowest RMSE, but take note that the improvement in RMSE is negligible (only 0.0001 improvement), so may choose n = 500 due to runtime concerns. 
 ```
+
+## may need to delete this
 ### (alternative code for tuning with 10 fold CV)
 ```{r}
 library(randomForest)
@@ -192,7 +194,7 @@ print(paste("Best number of trees:", best_ntree))
 
 ### Model with tuned parameters
 ```{r}
-rffit = randomForest(log_price~.,data=train_ml,ntree=50, mtry= 138/3) 
+rffit = randomForest(log_price~.,data=train_ml,ntree=500, mtry= 138/3) 
 
 plot(rffit) #plot the OOB error 
 
@@ -222,7 +224,101 @@ rmse_bag <- sqrt(mean((test_ml$log_price - predictions_bag)^2))
 print(paste("RMSE for Random Forest:", rmse_rt))
 ```
 
-### XG Boost 
+
+# Traditional Gradient Boosting Machine (GBM)
+```{r}
+# Load the gbm package
+library(gbm)
+
+# Define the parameter grid
+ntree_values <- c(500, 1000)  # Number of trees
+interaction_depth_values <- c(2, 5)  # Interaction depth
+
+# Initialize variables to store best parameters and performance
+best_ntree <- NULL
+best_interaction_depth <- NULL
+best_performance <- Inf  # Initialize with a large value for minimization problems
+
+# Perform grid search
+for (ntree in ntree_values) {
+  for (depth in interaction_depth_values) {
+    # Train GBM model on training data with current hyperparameters
+    gbm_model <- gbm(log_price ~ ., data = train_ml, distribution = 'gaussian',
+                     interaction.depth = depth, n.trees = ntree, shrinkage = 0.01, cv.folds = 10)
+    
+    # Evaluate performance (you can use different metrics here)
+    # For example, you might want to use mean squared error from cross-validation
+    performance <- gbm.perf(gbm_model, method = "cv")
+    mse_cv <- performance$cv.error[gbm_model$best.t]
+    
+    # Update best parameters if performance is improved
+    if (mse_cv < best_performance) {
+      best_ntree <- ntree
+      best_interaction_depth <- depth
+      best_performance <- mse_cv
+    }
+  }
+}
+
+
+# Print the best hyperparameters and performance
+cat("Best number of trees:", best_ntree, "\n")
+cat("Best interaction depth:", best_interaction_depth, "\n")
+cat("Best cross-validated MSE:", best_performance, "\n")
+
+
+```
+# fit Traditional Gradient Boosting with optimal hyperparameters
+```{r}
+
+# Train final GBM model with best hyperparameters on the entire training set
+final_gbm_model <- gbm(log_price ~ ., data = train_ml, distribution = 'gaussian',
+                        interaction.depth = best_interaction_depth, n.trees = best_ntree,
+                        shrinkage = 0.01, cv.folds = 10)
+      
+# Make predictions on test data
+predictions_gbm <- predict(final_gbm_model, (test_ml%>%select(-log_price)), n.trees = best_ntree_gbm, type = "response")
+      
+# Calculate RMSE
+rmse_gbm <- sqrt(mean((test_ml$log_price - predictions_gbm)^2))
+
+print(paste("RMSE for Gradient Boosting: ", rmse_gbm))
+
+```
+
+
+## Hedonic price function using post-LASSO and feature engineering
+# ML model
+#suggested by Denis
+```{r}
+library(hdm)
+
+plasso = rlasso(y~., data=train_ml,penalty=list(X.dependent.lambda=FALSE, homoscedastic=FALSE),  post=TRUE)
+
+# Make predictions on the test data
+predictions_plasso <- predict(plasso, newdata = test_ml)
+ 
+# Calculate RMSE
+rmse_plasso <- sqrt(mean((test_ml$log_price - predictions_plasso)^2))
+ 
+# Print RMSE
+print(paste("RMSE for hedonic Post Lasso Regression:", rmse_plasso))
+```
+
+
+# Artificial Neural Network (ANN)
+```{r}
+ann_model <- train(
+  log_price ~ ., 
+  data = train_ml, 
+  method = "nnet", 
+  trControl = trainControl(method = "cv", number = 10), 
+  tuneLength = 10,
+  trace = FALSE # Set to TRUE for verbose output
+)
+```
+
+### XG Boost (may need to delete/change if Denis doesnt like this)
 ### Tuning (This code is taking too long to run)
 ```{r}
 library(xgboost) 
@@ -336,174 +432,4 @@ rmse_xgols <- sqrt(mean((test_ml$log_price - predictions_xgols)^2))
 print(paste("RMSE for XGBoost OLS:", rmse_xgols))
 
 summary(xg_ols)
-```
-
-### Need changes
-# Gradient Boosting Machine (GBM)
-```{r}
-# Load the gbm package
-library(gbm)
-
-# Separate predictors (X) and response variable (Y) for validation set
-X_val <- subset(validation_ml, select = -c(log_price))
-Y_val <- validation_ml$log_price
-
-# Define the number of trees and interaction depth to tune over
-ntree_values <- c(50, 100, 150)  # Number of trees
-interaction_depth_values <- c(1, 3, 5)  # Interaction depth
-
-# Number of folds for cross-validation
-nfolds <- 10
-
-# Initialize vector to store RMSE values
-rmse_values <- matrix(NA, nrow = length(ntree_values), ncol = length(interaction_depth_values),
-                      dimnames = list(ntree_values, interaction_depth_values))
-
-# Split validation set into folds
-validation_folds <- createFolds(1:nrow(validation_ml), k = nfolds)
-
-# Loop over each combination of hyperparameters
-for (ntree in ntree_values) {
-  for (depth in interaction_depth_values) {
-    # Initialize vector to store RMSE values for this combination of hyperparameters
-    rmse_values_cv <- numeric(nfolds)
-    
-    # Perform cross-validation
-    for (fold in 1:nfolds) {
-      # Get training and validation indices for this fold
-      train_indices <- unlist(validation_folds[-fold])
-      validation_indices <- validation_folds[[fold]]
-      
-      # Train GBM model on validation data
-      gbm_model <- gbm(Y_val ~ ., data = X_val[train_indices, ], distribution = "gaussian",
-                       n.trees = ntree, interaction.depth = depth)
-      
-      # Make predictions on validation set
-      predictions_gbm <- predict(gbm_model, X_val[validation_indices, ], n.trees = ntree, type = "response")
-      
-      # Calculate RMSE
-      rmse_values_cv[fold] <- sqrt(mean((Y_val[validation_indices] - predictions_gbm)^2))
-    }
-    
-    # Take the average RMSE across all folds
-    rmse_values[as.character(ntree), as.character(depth)] <- mean(rmse_values_cv)
-  }
-}
-
-# Find the combination of hyperparameters with the lowest RMSE
-min_rmse_gbm <- min(rmse_values, na.rm = TRUE)
-best_ntree_gbm <- as.numeric(rownames(which(rmse_values == min_rmse, arr.ind = TRUE)))
-best_depth_gbm <- as.numeric(colnames(which(rmse_values == min_rmse, arr.ind = TRUE)))
-
-# Print the best hyperparameters and corresponding RMSE
-cat("Best number of trees for Gradient Boosting:", best_ntree, "\n")
-cat("Best interaction depth for Gradient Boosting:", best_depth, "\n")
-cat("Minimum RMSE for Gradient Boosting:", min_rmse, "\n")
-
-```
-
-# fit Gradient Boosting with optimal hyperparameters
-```{r}
-
-# Train GBM model on train data
-gbm_model_final <- gbm(Y ~ ., data = X, distribution = "gaussian",
-                       n.trees = best_ntree_gbm, interaction.depth = best_depth_gbm)
-      
-# Make predictions on test data
-predictions_gbm <- predict(gbm_model, (test_ml%>%select(-log_price)), n.trees = best_ntree_gbm, type = "response")
-      
-# Calculate RMSE
-rmse_gbm <- sqrt(mean((test_ml$log_price - predictions_gbm)^2))
-
-```
-
-
-## Hedonic price function using post-LASSO and feature engineering
-
-# ML model
-```{r}
-# Load required packages
-library(glmnet)
-
-
-# Separate predictors (X) and response variable (Y)
-X <- as.matrix(subset(train_ml, select = -c(log_price)))
-Y <- train_ml$log_price
-
-# create X and Y for tuning hyperparameter using 10-fold CV
-X_val <- as.matrix(subset(validation_ml, select = -c(log_price)))
-Y_val <- validation_ml$log_price
-
-# Tune complexity parameter lambda with ten-fold cross-validation
-lambda_values <- 10^seq(-1, 1, by = 0.1)  # Range of lambda values to tune over
-
-# Initialize variables to store the best lambda and its corresponding performance
-best_lambda <- 0
-best_performance <- Inf  # Initialize with a very high value for minimization problems
-
-# Iterate over lambda values
-for (lambda in lambda_values) {
-  # Fit Lasso regression model
-  glmnet_model <- glmnet(X, Y, alpha = 1, lambda = lambda, standardize = TRUE)
-  
-  # Perform ten-fold cross-validation
-  cv_fit <- cv.glmnet(X_val, Y_val, alpha = 1, lambda = lambda_values, standardize = TRUE, nfolds = 10)
-  
-  # Extract mean squared error (or other performance metric) from cross-validation results
-  mean_mse <- min(cv_fit$cvm)
-  
-  # Check if the current performance is better than the best performance so far
-  if (mean_mse < best_performance) {
-    best_performance <- mean_mse
-    best_lambda <- lambda
-  }
-}
-
-# Print the best lambda
-print(best_lambda)
-
-# Extract optimal lambda
-optimal_lambda <- best_lambda
-
-```
-
-# Optimal Post Lasso using optimal lambda
-```{r}
-
-# Fit LASSO regression model
-lasso_model <- glmnet(x = as.matrix(X), y = Y, alpha = 1, lambda = optimal_lambda, standardize = TRUE)
-
-# Extract selected variables with non-zero coefficients
-feature_names <- coef(lasso_model)
-
-selected_vars <- feature_names@Dimnames[[1]][-1]
-
-data = data.frame(Y, train_ml%>%select(selected_vars))
-
-# Fit OLS regression model using selected variables
-plasso <- lm(Y ~ ., data = data)
-
-# Make predictions on the test data
-predictions_plasso <- predict(plasso, newdata = test_ml)
- 
-# Calculate RMSE
-rmse_plasso <- sqrt(mean((test_ml$log_price - predictions_plasso)^2))
- 
-# Print RMSE
-print(paste("RMSE for hedonic Post Lasso OLS:", rmse_plasso))
-
-#model summary
-summary(plasso)
-```
-
-# Artificial Neural Network (ANN)
-```{r}
-ann_model <- train(
-  log_price ~ ., 
-  data = train_ml, 
-  method = "nnet", 
-  trControl = trainControl(method = "cv", number = 10), 
-  tuneLength = 10,
-  trace = FALSE # Set to TRUE for verbose output
-)
 ```
