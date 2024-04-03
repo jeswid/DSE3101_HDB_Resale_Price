@@ -13,7 +13,9 @@ library('leaflet')
 library('RColorBrewer')
 
 SG_map = readRDS("data/SG_map.rds")
-all_address = read.csv("data/hdb_block_details.csv")
+all_address = read.csv("data/hdb_block_details.csv") %>%
+  rename(lng = long) %>%
+  rename("Primary School" = "primary_schools_1km")
 amenities = read.csv("data/lat_long_for_visualisation.csv")
 hawker_centres = read.csv("data/hawker_centres_geocode.csv")
 hospitals = read.csv("data/hospitals_geocode.csv")
