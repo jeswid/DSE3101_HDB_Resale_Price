@@ -23,10 +23,10 @@ hdb_data = read.csv("processed_data/hdb_resale_prices.csv") %>%
 # Stratified Sampling by 'year'
 strata_cols <- c("year")
 
-# Perform the stratified sampling for training set (30%)
+# Perform the stratified sampling for training set (20%)
 train_data <- hdb_data %>%
   group_by(across(all_of(strata_cols))) %>%
-  sample_frac(0.3) %>% # Adjust the fraction as needed for training set
+  sample_frac(0.2) %>% # Adjust the fraction as needed for training set
   ungroup()
 
 # Remaining data for test sets
@@ -222,6 +222,7 @@ cat("Best number of trees:", best_ntree, "\n")
 cat("Best interaction depth:", best_interaction_depth, "\n")
 cat("Best cross-validated MSE:", best_performance, "\n")
 ```
+
 # fit Traditional Gradient Boosting with optimal hyperparameters
 ```{r}
 # Train final GBM model with best hyperparameters on the entire training set
@@ -258,19 +259,7 @@ print(paste("RMSE for hedonic Post Lasso Regression:", rmse_plasso))
 ```
 
 
-# Artificial Neural Network (ANN)
-```{r}
-ann_model <- train(
-  log_price ~ ., 
-  data = train_ml, 
-  method = "nnet", 
-  trControl = trainControl(method = "cv", number = 10), 
-  tuneLength = 10,
-  trace = FALSE # Set to TRUE for verbose output
-)
-```
-
-### XG Boost (may need to delete/change if Denis doesnt like this)
+### XG Boost For Feature Engineering
 ### Tuning (This code is taking too long to run)
 ```{r}
 library(xgboost) 
@@ -384,66 +373,4 @@ rmse_xgols <- sqrt(mean((test_ml$log_price - predictions_xgols)^2))
 print(paste("RMSE for XGBoost OLS:", rmse_xgols))
 
 summary(xg_ols)
-```
-
-### Stuff to discuss whether to delete
-## may need to delete this
-### (alternative code for tuning with 10 fold CV)
-```{r}
-library(randomForest)
-
-# Define the number of trees to tune over
-ntreev <- c(30, 40, 50)
-
-# Number of folds for cross-validation
-nfolds <- 10
-
-# Initialize vector to store RMSE values
-rmse_values <- numeric(length(ntreev))
-
-# Loop over each number of trees
-for (i in seq_along(ntreev)) {
-  # Initialize vector to store RMSE values for this number of trees
-  rmse_values_cv <- numeric(nfolds)
-  
-  # Perform cross-validation
-  for (fold in 1:nfolds) {
-    # Split data into training and validation sets for this fold
-    fold_size <- nrow(validation_ml) / nfolds
-    fold_start <- (fold - 1) * fold_size + 1
-    fold_end <- fold * fold_size
-    
-    # Ensure indices are integers
-    validation_indices <- as.integer(fold_start:fold_end)
-    train_indices <- setdiff(1:nrow(validation_ml), validation_indices)
-    
-    # Train Random Forest model
-    rffit <- tryCatch(
-      randomForest(log_price ~ ., data = validation_ml[train_indices, ], ntree = ntreev[i], mtry = 138/3),
-      error = function(e) {
-        print(paste("Error in training Random Forest for fold", fold, "and ntree", ntreev[i], ":"))
-        print(e)
-        return(NULL)
-      }
-    )
-    
-    if (is.null(rffit)) next  # Skip to the next fold if training failed
-    
-    # Make predictions on validation set
-    predictions_rf <- predict(rffit, validation_ml[validation_indices, ], method = "anova")
-    
-    # Calculate RMSE
-    rmse_values_cv[fold] <- sqrt(mean((validation_ml$log_price[validation_indices] - predictions_rf)^2))
-  }
-  
-  # Take the average RMSE across all folds
-  rmse_values[i] <- mean(rmse_values_cv)
-  
-  # Print RMSE for this number of trees
-  print(paste("Average RMSE for Random Forest (trees:", ntreev[i], "):", rmse_values[i]))
-}
-
-# Select the number of trees with the lowest RMSE
-best_ntree <- ntreev[which.min(rmse_values)]
-print(paste("Best number of trees:", best_ntree))
 ```
