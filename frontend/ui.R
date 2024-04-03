@@ -5,52 +5,54 @@ library(shinyjs)
 ui <- fluidPage(
   useShinyjs(),  # Initialize shinyjs
   tags$head(
-    tags$script(HTML("
-      $(document).on('shiny:inputchanged', function(event) {
-        if (event.name === 'tabs') {
-          if (['GeospatialAnalysis', 'PredictedPrice'].includes(event.value)) {
-            $('#sidebar').show();
-          } else {
-            $('#sidebar').hide();
-          }
-        }
-      });
-    "))
-  ),
+    tags$style(HTML("
+    
+      .navbar-default {
+        background-color: #FFFFFF;  /* White background */
+        border-color: #FFB6C1;  /* Light red border */
+      }
+      .navbar-default .navbar-brand {
+        color: #FFB6C1;  /* Light red color for the navbar brand (title) */
+      }
+      .navbar-default .navbar-nav > li > a {
+        color: #FFB6C1;  /* Light red color for nav links */
+      }
+      .well {
+        background-color: #FFFFFF;  /* White background for sidebar */
+        border: 1px solid #FFB6C1;  /* Light red border for sidebar */
+      }
+      .btn-primary {
+        background-color: #FFB6C1;  /* Light red background for buttons */
+        border-color: #FFB6C1;  /* Light red border for buttons */
+      }
+      .btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+        background-color: #FFC0CB; /* Lighter red when hovered, focused or active */
+        border-color: #FFC0CB;
+      }
+      /* Additional styles can be added here */
+    ")),
   navbarPage(
     id = "tabs",  # Important: set an ID for the navbarPage
     title = "Visualizing and Predicting Singapore HDB Resale Prices",
     tabPanel("Home", value = "Home",
-             fluidRow(
-               column(12,
-                      # Content for Home tab
-                      textOutput("homeOutput")
-               )
-             )
-    ),
+             uiOutput("homeOutput") ),
     tabPanel("Geospatial Analysis", value = "GeospatialAnalysis",
              fluidRow(
-               column(12,
-                      textOutput("geoSelectionOutput")),
                column(9,
-                      leafletOutput("map", width = "100%", height = "600px") # Map output
+                      leafletOutput("map", width = "100%", height = "600px"),
+                      textOutput("geoSelectionOutput") # Change font-size value as needed
                ),
+
+ # Map output
                column(3,
                       # Sidebar content for geospatial analysis goes here (e.g., inputs, action buttons, etc.)
                       # It will only be visible when the Geospatial Analysis tab is active
                       div(id = "sidebar", class = "well",
                           selectInput("addressM","Postal Code", choices = c(unique(all_address$postal))),
-                          selectInput("townM", "Town", choices = c(unique(all_address$town))),
-                          selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
-                                                                              'New Generation', 'Maisonette', 'Apartment', 'Simplified',
-                                                                              'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
-                                                                              '2-room', 'Executive Maisonette', 'Type S1S2'), 
-                                      selected = "Model A"),
-                          selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
-                          selectInput("amenities", "Amenities", choices = c("Primary School", "Shopping Centre", "Food Court", "Gym", "Community Center", "Junior College"), selected = "Primary School"),
                           actionButton("submitmap", "Submit HDB 🔎", class = "btn-primary") ) ), ) ),
    
-     tabPanel("Predicted Price", value = "PredictedPrice",
+     
+ tabPanel("Predicted Price", value = "PredictedPrice",
              
              fluidRow(
                column(12,
@@ -58,16 +60,19 @@ ui <- fluidPage(
                       textOutput("priceOutput") )),
              div(id = "sidebar", class = "well",
                  selectInput("address","Postal Code", choices = c(unique(all_address$postal))),
-                 selectInput("town", "Town", choices = c(unique(all_address$town))),
                  selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
                                                                       'New Generation', 'Maisonette', 'Apartment', 'Simplified',
                                                                       'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
                                                                       '2-room', 'Executive Maisonette', 'Type S1S2'), 
                              selected = "Model A"),
                  selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
-                 selectInput("amenities", "Amenities", choices = c("Primary School", "Shopping Centre", "Food Court", "Gym", "Community Center", "Junior College"), selected = "Primary School"),
+                 sliderInput("storey","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
+                 checkboxGroupInput("amenities", "Select Amenities:", choices = c("Primary School","Hawker Center", "MRT Station", "Supermarket","Hospital"),inline = TRUE),
+                 
                           actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary") )),
     verbatimTextOutput("priceOutput") ))
+ 
+)
 
   
 

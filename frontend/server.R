@@ -37,15 +37,50 @@ shinyServer(function(input, output, session) {
   
   observeEvent(input$submitprice, {
     output$priceOutput <- renderText({
-      paste("You have selected:", 
-            input$address, input$town, input$flat_model, 
-            input$flat_type, input$amenities, sep = "\n")
+      paste("Your choice:", 
+            street_name(),",",input$flat_type, 
+            input$flat_modelM,"FLAT AT LEVEL", input$storey, sep = "\n")
     })})
     
-    observeEvent(input$submitmap, {
-      output$geoSelectionOutput <- renderText({
-        paste("You have selected:", input$address, 
-              input$town, input$flat_model, input$flat_type, input$amenitiesM, sep = "\n")})
-    })
+  street_name <- reactive({
+    # Find the row in the data where the postal code matches the input
+    matched_row <- all_address[all_address$postal == input$addressM, ]
+    
+    # If there's a match, return the street name; otherwise, return NA or an informative message
+    if(nrow(matched_row) > 0) {
+      return(matched_row$street)
+    } else {
+      return(NA) # Or return something like "Street name not found"
+    }
+  })
+  
+  # Output the street name
+  output$geoSelectionOutput <- renderText({
+    if(!is.null(input$addressM) && !is.na(street_name())) {
+      paste("You have selected:", street_name(), sep = "\n")
+    } else {
+      "Please select a valid postal code."
+    }
+  })
+  
+  output$homeOutput <- renderUI({
+    HTML(paste0('
+    <div style="font-size: 15px; line-height: 1.6;">
+      <h2>Introduction</h2>
+      <p>First-time home buyers frequently face challenges such as planning their budget, selecting a suitable location, and understanding the dynamics of the property market.</p>
+      <p>Traditionally, house prices have been thought to reflect their proximity to urban centers, transportation networks, and amenities. Yet, the real connection between a property\'s practical benefits and its market value can be obscured by casual discussions or the perspectives of sales agents.</p>
+      <p>Our aim is to resolve these issues by providing buyers with crucial knowledge, enabling them to make informed decisions when purchasing their ideal home. This, in turn, reduces their reliance on external intermediaries like property agents.</p>
+      <h2>Data Sources</h2>
+      <p>Our data are meticulously curated from a variety of sources to ensure a balanced and precise experience for users of our website:</p>
+      <ul>
+        <li>HDB Resale Prices and Transaction History: Acquired from the authoritative database at data.gov.sg, offering insight into historical trends and current market values.</li>
+        <li>Amenities, Transportation Links, and Proximity to the Central Business District (CBD): Sourced from OneMap.sg, this data provides comprehensive details on local infrastructure, enhancing our understanding of property desirability and accessibility.</li>
+        <li>Demographic and Household Data: Compiled from the Singapore Department of Statistics, offering a detailed overview of demographic shifts and household compositions, pivotal for informed decision-making in the property market.</li>
+      </ul>
+    </div>'
+    ))
+  })
+  
+  
   
 })
