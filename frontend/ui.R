@@ -35,13 +35,7 @@ ui <- fluidPage(
     id = "tabs",  # Important: set an ID for the navbarPage
     title = "Visualizing and Predicting Singapore HDB Resale Prices",
     tabPanel("Home", value = "Home",
-             fluidRow(
-               column(12,
-                      # Content for Home tab
-                      textOutput("homeOutput")
-               )
-             )
-    ),
+             uiOutput("homeOutput") ),
     tabPanel("Geospatial Analysis", value = "GeospatialAnalysis",
              fluidRow(
                column(9,
