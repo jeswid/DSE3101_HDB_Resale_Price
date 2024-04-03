@@ -1,118 +1,79 @@
-library(shiny)
-library(shinyjs)
-library(leaflet)
-library(dplyr)
+library('leaflet')
+library('htmltools')
+library('DT')
+library('dplyr')
+library('tidyr')
+library('ggplot2')
+library("htmltools")
+library('shiny')
+library('shinydashboard')
+library('leaflet')
+library('RColorBrewer')
 
 shinyServer(function(input, output, session) {
   shinyjs::addClass(selector = "body", class = "sidebar-collapse")
   
-  # Assuming all_address is a data frame with your data
-  # Example for all_address
-  # all_address <- data.frame(lat = runif(10, min = 1.2, max = 1.5),
-  #                           long = runif(10, min = 103.6, max = 104),
-  #                           town = LETTERS[1:10])
-  
-  # Reactive expression for filtered data
-  filteredData <- reactive({
-    all_address %>%
-      filter(mrt == all_address$mrt_1km, 
-             hawkers == alladress$hawkers_1km, 
-             schs == alladdress$primary_schools_1km, 
-             hospitals == alladress$hospitals_1km,
-             town == alladdress$street
-      )
+  filtered_data <- reactive({
+    if (!is.null(input$address) && !is.null(input$amenities)) {
+      print("Selected Postal Code:")
+      print(input$address)
+      
+      print("Unique Postal Codes in Dataset:")
+      print(unique(all_address$postal))
+      
+      selected_data <- all_address %>%
+        filter(postal == input$address) %>%
+        select(lat, lng, town, amenities = input$amenities) %>%
+        unique() %>%
+        slice(1)
+      
+      print("Filtered Data:")
+      print(selected_data)
+      
+      return(selected_data)
+    } else {
+      return(NULL)
+    }
   })
   
-  # Color palette reactive (example logic)
-  colorpal <- reactive({
-    colorNumeric("RdYlBu", domain = filteredData()$some_value)
-  })
   
   # Initial map creation without markers
   output$map <- renderLeaflet({
     leaflet() %>% 
       addTiles() %>%
       setView(lng = 103.8198, lat = 1.28, zoom = 10.5) %>%
-      setMaxBounds(lng1 = 103.600250, lat1 = 1.202674, lng2 = 104.027344, lat2 = 1.484121)
-  })
-  
-  findRegion <- function(lat, lng) {
-    distances <- sqrt((all_address$lat - lat)^2 + (all_address$lng - lng)^2)
-    closest_index <- which.min(distances)
-    closest_region <- all_address[closest_index, ]
-    return(closest_region)
-  }
-  
-  observe({
-    click <- input$map_click
-    if(is.null(click)) return()
-    
-    clicked_region <- findRegion(click$lat, click$lng)
-    if(is.null(clicked_region)) return()
-    
-    content <- as.character(tagList(
-      tags$h4("Town of selected house:", clicked_region$town),
-      sprintf("Mrt within 1km: %s%", as.integer(clicked_region$mrt_1km)),
-      sprintf("Primary schools within 1km: %s%", as.integer(clicked_region$primary_schools_1km)), 
-      sprintf("Hawker centres within 1km: %s", as.integer(clicked_region$hawkers_1km))
-    ))
-    
-    leafletProxy("map") %>%
-      clearPopups() %>%  # Clear existing popups
-      addPopups(lng = click$lng, lat = click$lat, content)
+      setMaxBounds(lng1 = 103.600250, lat1 = 1.202674, lng2 = 104.027344, lat2 = 1.484121) %>% 
+      addCircleMarkers(color = "#444444", weight = 1,opacity = 1.0, fillOpacity = 0.5,
+                  lng = filtered_data$lng, 
+                  lat = filtered_data$lat,
+                  popup = ~paste("Town: ", filtered_data$town, 
+                                 "<br/>", "Amenities: ", filtered_data$amenities)) 
   })
   
   
-  # When map is clicked, show a popup with city info
-  
-  # observe({
-  # click <- input$map_click
-  # if(is.null(click)) return()  # Exit if no click yet
-  #   
-  #   # Determine the content of the popup based on the clicked location
-  #   # For demonstration, simply showing the coordinates
-  #   content <- as.character(tagList(
-  #     tags$h4("town of selected house:", all_address$town), tags$br(),
-  #     sprintf("Mrt within 1km: %s", as.integer( all_address$mrt_1km)), tags$br(),
-  #     sprintf("Primary schools within 1km: %s%%", as.integer( all_address$primary_schools_1km)), tags$br(),
-  #     sprintf("Hawker centres within 1km", as.integer( all_address$hawkers_1km))))
-  #   
-  #   # Update the map with a popup at the clicked location
-  # leafletProxy("map") %>%
-  #   clearPopups() %>%  # Clear existing popups
-  #   addPopups(lng = click$lng, lat = click$lat, popupContent)
-  # })
-  
-  output$geoOutput <- renderText({ "Map will be displayed here." })
-  output$priceOutput <- renderText({ "Predicted price will be shown here." })
-  
-  observeEvent(input$submit, {
-    # This is where you can process the inputs and update the outputs.
-    # For example:
-    output$homeOutput <- renderText({
-      #make the chosen into a box instead of a line
-      paste("You have selected:", input$address, input$town, input$flat_model)
-    })
+  observeEvent(input$submitmap, {
+    selected_data <- filtered_data()
+    
+    if (!is.null(filtered_data) && nrow(filtered_data) > 0) {
+      leafletProxy("map") %>% 
+        clearMarkers() %>%
+        addCircleMarkers(color = "#444444", weight = 1, opacity = 1.0, fillOpacity = 0.5,
+                         lng = filtered_data$lng, 
+                         lat = filtered_data$lat,
+                         popup = ~paste("Town: ", filtered_data$town, 
+                                        "<br/>", "Amenities: ", filtered_data$amenities))
+    } else {
+      leafletProxy("map") %>%
+        clearMarkers()  # Clear markers from the map
+      print("No data found for the provided address.")
+    }
   })
-  output$geoOutput <- renderText({ "Map will be displayed here." })
   
-  observeEvent(input$submit, {
-    # Construct the text with the selected inputs
+  observeEvent(input$submitprice, {
     output$priceOutput <- renderText({
-      paste("You have selected:", 
-            input$address, 
-            input$town, 
-            input$flat_model, 
-            input$flat_type, 
-            input$amenities, 
-            sep = "\n")
+      paste("Predicted Price Selection:", 
+            input$address, input$town, input$flat_model, 
+            input$flat_type, input$amenities, sep = "\n")
     })
-    
-    
-     # Separate items by a new line
   })
-  })
-  
-  
-
-  
+})

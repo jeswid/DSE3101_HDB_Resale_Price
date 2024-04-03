@@ -30,6 +30,8 @@ ui <- fluidPage(
     ),
     tabPanel("Geospatial Analysis", value = "GeospatialAnalysis",
              fluidRow(
+               column(12,
+                      textOutput("geoSelectionOutput")),
                column(9,
                       leafletOutput("map", width = "100%", height = "600px") # Map output
                ),
@@ -37,17 +39,18 @@ ui <- fluidPage(
                       # Sidebar content for geospatial analysis goes here (e.g., inputs, action buttons, etc.)
                       # It will only be visible when the Geospatial Analysis tab is active
                       div(id = "sidebar", class = "well",
-                          selectInput("address","Postal Code", choices = c(unique(all_address$postal))),
-                          selectInput("town", "Town", choices = c(unique(all_address$town))),
-                          selectInput("flat_model", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
+                          selectInput("addressM","Postal Code", choices = c(unique(all_address$postal))),
+                          selectInput("townM", "Town", choices = c(unique(all_address$town))),
+                          selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
                                                                               'New Generation', 'Maisonette', 'Apartment', 'Simplified',
                                                                               'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
                                                                               '2-room', 'Executive Maisonette', 'Type S1S2'), 
                                       selected = "Model A"),
                           selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
                           selectInput("amenities", "Amenities", choices = c("Primary School", "Shopping Centre", "Food Court", "Gym", "Community Center", "Junior College"), selected = "Primary School"),
-                          actionButton("submit", "Submit HDB 🔎", class = "btn-primary") ) ), ) ),
-    tabPanel("Predicted Price", value = "PredictedPrice",
+                          actionButton("submitmap", "Submit HDB 🔎", class = "btn-primary") ) ), ) ),
+   
+     tabPanel("Predicted Price", value = "PredictedPrice",
              
              fluidRow(
                column(12,
@@ -56,14 +59,14 @@ ui <- fluidPage(
              div(id = "sidebar", class = "well",
                  selectInput("address","Postal Code", choices = c(unique(all_address$postal))),
                  selectInput("town", "Town", choices = c(unique(all_address$town))),
-                          selectInput("flat_model", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
-                                                                              'New Generation', 'Maisonette', 'Apartment', 'Simplified',
-                                                                              'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
-                                                                              '2-room', 'Executive Maisonette', 'Type S1S2'), 
-                                      selected = "Model A"),
-                          selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
-                          selectInput("amenities", "Amenities", choices = c("Primary School", "Shopping Centre", "Food Court", "Gym", "Community Center", "Junior College"), selected = "Primary School"),
-                          actionButton("submit", "Submit HDB 🔎", class = "btn-primary") )),
+                 selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
+                                                                      'New Generation', 'Maisonette', 'Apartment', 'Simplified',
+                                                                      'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
+                                                                      '2-room', 'Executive Maisonette', 'Type S1S2'), 
+                             selected = "Model A"),
+                 selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
+                 selectInput("amenities", "Amenities", choices = c("Primary School", "Shopping Centre", "Food Court", "Gym", "Community Center", "Junior College"), selected = "Primary School"),
+                          actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary") )),
     verbatimTextOutput("priceOutput") ))
 
   
