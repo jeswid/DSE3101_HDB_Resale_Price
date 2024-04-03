@@ -248,14 +248,17 @@ for (ntree in ntree_values) {
     
     # Evaluate performance (you can use different metrics here)
     # For example, you might want to use mean squared error from cross-validation
-    performance <- gbm.perf(gbm_model, method = "cv")
+    gbm_perf_plot <- gbm.perf(gbm_model, method = "cv")
     
-    #pdf("gbm_performance_plot.pdf")
-    print(perf_plot)
-    #dev.off()
+    pdf("gbm_perf_plot.pdf")
+    print(gbm_perf_plot)
+    dev.off()
     
     # Manually calculate cross-validation error
-    mse_cv <- gbm_model$cv.error[gbm_model$best.t]
+    best_tree_index <- which.min(gbm_model$cv.error)  
+    
+    # Get MSE for best tree
+    mse_cv <- gbm_model$cv.error[best_tree_index]  
     
     # Update best parameters if performance is improved
     if (mse_cv < best_performance) {
