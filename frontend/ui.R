@@ -5,18 +5,32 @@ library(shinyjs)
 ui <- fluidPage(
   useShinyjs(),  # Initialize shinyjs
   tags$head(
-    tags$script(HTML("
-      $(document).on('shiny:inputchanged', function(event) {
-        if (event.name === 'tabs') {
-          if (['GeospatialAnalysis', 'PredictedPrice'].includes(event.value)) {
-            $('#sidebar').show();
-          } else {
-            $('#sidebar').hide();
-          }
-        }
-      });
-    "))
-  ),
+    tags$style(HTML("
+    
+      .navbar-default {
+        background-color: #FFFFFF;  /* White background */
+        border-color: #FFB6C1;  /* Light red border */
+      }
+      .navbar-default .navbar-brand {
+        color: #FFB6C1;  /* Light red color for the navbar brand (title) */
+      }
+      .navbar-default .navbar-nav > li > a {
+        color: #FFB6C1;  /* Light red color for nav links */
+      }
+      .well {
+        background-color: #FFFFFF;  /* White background for sidebar */
+        border: 1px solid #FFB6C1;  /* Light red border for sidebar */
+      }
+      .btn-primary {
+        background-color: #FFB6C1;  /* Light red background for buttons */
+        border-color: #FFB6C1;  /* Light red border for buttons */
+      }
+      .btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+        background-color: #FFC0CB; /* Lighter red when hovered, focused or active */
+        border-color: #FFC0CB;
+      }
+      /* Additional styles can be added here */
+    ")),
   navbarPage(
     id = "tabs",  # Important: set an ID for the navbarPage
     title = "Visualizing and Predicting Singapore HDB Resale Prices",
@@ -61,6 +75,8 @@ ui <- fluidPage(
                  sliderInput("storey","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
                           actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary") )),
     verbatimTextOutput("priceOutput") ))
+ 
+)
 
   
 
