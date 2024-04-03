@@ -42,19 +42,26 @@ shinyServer(function(input, output, session) {
     leaflet() %>% 
       addTiles() %>%
       setView(lng = 103.8198, lat = 1.28, zoom = 10.5) %>%
-      setMaxBounds(lng1 = 103.600250, lat1 = 1.202674, lng2 = 104.027344, lat2 = 1.484121)
+      setMaxBounds(lng1 = 103.600250, lat1 = 1.202674, lng2 = 104.027344, lat2 = 1.484121) %>% 
+      addCircleMarkers(color = "#444444", weight = 1,opacity = 1.0, fillOpacity = 0.5,
+                  lng = filtered_data$lng, 
+                  lat = filtered_data$lat,
+                  popup = ~paste("Town: ", filtered_data$town, 
+                                 "<br/>", "Amenities: ", filtered_data$amenities)) 
   })
+  
   
   observeEvent(input$submitmap, {
     selected_data <- filtered_data()
     
-    if (!is.null(selected_data) && nrow(selected_data) > 0) {
+    if (!is.null(filtered_data) && nrow(filtered_data) > 0) {
       leafletProxy("map") %>% 
         clearMarkers() %>%
-        addCircleMarkers(lng = selected_data$lng, 
-                         lat = selected_data$lat, 
-                         popup = ~paste("Town: ", selected_data$town, 
-                                        "<br/>", "Amenities: ", selected_data$amenities))
+        addCircleMarkers(color = "#444444", weight = 1, opacity = 1.0, fillOpacity = 0.5,
+                         lng = filtered_data$lng, 
+                         lat = filtered_data$lat,
+                         popup = ~paste("Town: ", filtered_data$town, 
+                                        "<br/>", "Amenities: ", filtered_data$amenities))
     } else {
       leafletProxy("map") %>%
         clearMarkers()  # Clear markers from the map
