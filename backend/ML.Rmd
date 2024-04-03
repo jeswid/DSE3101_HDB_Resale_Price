@@ -190,17 +190,17 @@ for (ntree in ntree_values) {
     
     # Evaluate performance (you can use different metrics here)
     # For example, you might want to use mean squared error from cross-validation
-<<<<<<< HEAD
+
     gbm_perf_plot <- gbm.perf(gbm_model, method = "cv")
     
     pdf("gbm_perf_plot.pdf")
     print(gbm_perf_plot)
     dev.off()
-=======
+
     performance <- gbm.perf(gbm_model, method = "cv")
 
     print(perf_plot)
->>>>>>> fec722f9a2943262d74a783cc5fe342940e90200
+
     
     # Manually calculate cross-validation error
     best_tree_index <- which.min(gbm_model$cv.error)  
@@ -218,9 +218,13 @@ for (ntree in ntree_values) {
 }
 
 # Print the best hyperparameters and performance
-cat("Best number of trees:", best_ntree, "\n")
-cat("Best interaction depth:", best_interaction_depth, "\n")
-cat("Best cross-validated MSE:", best_performance, "\n")
+print("Best number of trees:", best_ntree, "\n")
+print("Best interaction depth:", best_interaction_depth, "\n")
+print("Best cross-validated MSE:", best_performance, "\n")
+
+#best number of trees: 1000
+#best interaction depth: 5
+#best CV MSE = 0.008329
 ```
 
 # fit Traditional Gradient Boosting with optimal hyperparameters
