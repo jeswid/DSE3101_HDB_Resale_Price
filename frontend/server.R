@@ -24,7 +24,7 @@ shinyServer(function(input, output, session) {
     icon = 'ios-close',
     iconColor = 'black',
     library = 'ion',
-    markerColor = "blue"
+    markerColor = "red"
   )
   
   output$map <- renderLeaflet({
