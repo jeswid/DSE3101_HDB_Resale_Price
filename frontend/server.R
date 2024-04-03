@@ -35,4 +35,17 @@ shinyServer(function(input, output, session) {
       addProviderTiles(providers$Esri.WorldStreetMap)
   })
   
+  observeEvent(input$submitprice, {
+    output$priceOutput <- renderText({
+      paste("You have selected:", 
+            input$address, input$town, input$flat_model, 
+            input$flat_type, input$amenities, sep = "\n")
+    })})
+    
+    observeEvent(input$submitmap, {
+      output$geoSelectionOutput <- renderText({
+        paste("You have selected:", input$address, 
+              input$town, input$flat_model, input$flat_type, input$amenitiesM, sep = "\n")})
+    })
+  
 })
