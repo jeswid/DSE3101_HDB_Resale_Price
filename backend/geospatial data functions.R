@@ -1,5 +1,7 @@
 library(readxl)
 library(tidyverse)
+library(jsonlite)
+library(httr)
 
 # Getting the latitude and longitude of each HDB address
 geo_code <- function(address) {
@@ -7,7 +9,7 @@ geo_code <- function(address) {
   lon <- 103.80010216304007
   x <- 24303.3101027
   y <- 31333.3389857
-  postal <- 148812
+  postal <- "148812"
   street <- "300 TANGLIN HALT ROAD NEW TOWN CAREHUT SINGAPORE 148812"
   tryCatch({
     street <- address
@@ -24,13 +26,13 @@ geo_code <- function(address) {
     lon <- as.numeric(df["LONGITUDE"])
     x <- as.numeric(df["X"])
     y <- as.numeric(df["Y"])
-    postal <- as.numeric(df["POSTAL"])
+    postal <- as.character(df["POSTAL"])
   }, error = function(e) {
     lat <- 1.2996418818103135
     lon <- 103.80010216304007
     x <- 24303.3101027
     y <- 31333.3389857
-    postal <- 148812
+    postal <- "148812"
     street <- "300 TANGLIN HALT ROAD NEW TOWN CAREHUT SINGAPORE 148812"
   })
   return(c(lat, lon, postal, x,  y, street))
@@ -41,7 +43,7 @@ get_details <- function(unique_addresses) {
   details <- data.frame(
     lat = numeric(),
     long = numeric(),
-    postal = numeric(),
+    postal = character(),
     x = numeric(),
     y = numeric(),
     street = character(),
@@ -61,7 +63,7 @@ get_details <- function(unique_addresses) {
     row <- data.frame(
       lat = as.numeric(coords[1]),
       long = as.numeric(coords[2]),
-      postal = as.numeric(coords[3]),
+      postal = as.character(coords[3]),
       x = as.numeric(coords[4]),
       y = as.numeric(coords[5]),
       street = as.character(coords[6]),
@@ -73,6 +75,7 @@ get_details <- function(unique_addresses) {
 }
 
 # HDB Geo Coordinates
+data_tidy = read.csv("backend/processed_data/hdb_prices_with_address.csv") %>% select(-1)
 lat_long_postal_xy = get_details(unique(data_tidy$address))
 lat_long_postal_xy = lat_long_postal_xy %>%
   filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
@@ -87,7 +90,7 @@ geo_code_amenities <- function(address) {
   lon <- 103.80010216304007
   x <- 24303.3101027
   y <- 31333.3389857
-  postal <- 148812
+  postal <- "148812"
   street <- "300 TANGLIN HALT ROAD NEW TOWN CAREHUT SINGAPORE 148812"
   tryCatch({
     address = str_replace_all(address," ","%20")
@@ -103,14 +106,14 @@ geo_code_amenities <- function(address) {
     lon <- as.numeric(df["LONGITUDE"])
     x <- as.numeric(df["X"])
     y <- as.numeric(df["Y"])
-    postal <- as.numeric(df["POSTAL"])
+    postal <- as.character(df["POSTAL"])
     street <- as.character(df["ADDRESS"])
   }, error = function(e) {
     lat <- 1.2996418818103135
     lon <- 103.80010216304007
     x <- 24303.3101027
     y <- 31333.3389857
-    postal <- 148812
+    postal <- "148812"
     street <- "300 TANGLIN HALT ROAD NEW TOWN CAREHUT SINGAPORE 148812"
   })
   return(c(lat, lon, postal, x,  y, street))
@@ -119,7 +122,7 @@ get_amenity_details <- function(unique_addresses) {
   details <- data.frame(
     lat = numeric(),
     long = numeric(),
-    postal = numeric(),
+    postal = character(),
     x = numeric(),
     y = numeric(),
     street = character(),
@@ -139,7 +142,7 @@ get_amenity_details <- function(unique_addresses) {
     row <- data.frame(
       lat = as.numeric(coords[1]),
       long = as.numeric(coords[2]),
-      postal = as.numeric(coords[3]),
+      postal = as.character(coords[3]),
       x = as.numeric(coords[4]),
       y = as.numeric(coords[5]),
       street = as.character(coords[6]),
@@ -151,17 +154,20 @@ get_amenity_details <- function(unique_addresses) {
 }
 
 # MRT stations Geo Coordinates
-mrt = read_excel("backend/raw_data/Train Station Codes and Chinese Names.xls")
+mrt = read_excel("backend/raw_data/Train Station Codes and Chinese Names.xls") 
 mrt_geocode = get_amenity_details(mrt$stn_code)
 mrt_geocode = mrt_geocode %>%
-  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values
+  filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
+  unique() %>% 
+  na.omit()
 # write.csv(mrt_geocode, "backend/processed_data/mrt_geocode.csv")
 
 # Supermarkets Geo Coordinates
 supermarkets = read.csv("backend/raw_data/ListofSupermarketLicences.csv")
-supermarkets_geocode = get_amenity_details(supermarkets$postal_code)
+supermarkets_geocode = get_amenity_details(unique(supermarkets$postal_code))
 supermarkets_geocode = supermarkets_geocode %>% 
-  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values 
+  filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
+  na.omit()
 # write.csv(supermarkets_geocode, "backend/processed_data/supermarkets_geocode.csv")
 
 # Hawker centers Geo Coordinates
@@ -172,40 +178,44 @@ hawkers <- hawker_centers %>%
   mutate(postal = str_replace(postal, "\\(", "")) %>%
   mutate(postal = str_replace(postal, "\\)", "")) %>% 
   separate_rows(postal, sep = "/")
-hawker_centers_geocode = get_amenity_details(hawkers$postal)
+hawker_centers_geocode = get_amenity_details(unique(hawkers$postal))
 hawker_centers_geocode = hawker_centers_geocode %>% 
-  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values 
+  filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
+  na.omit()
 # write.csv(hawker_centers_geocode, "backend/processed_data/hawker_centres_geocode.csv")
 
 # Primary Schools Geo Coordinates
 primary_schools = read.csv("backend/raw_data/primary_schools.csv")
 primary_schools <- primary_schools %>% mutate(Address = str_replace(Address, ", S", "-")) %>%
   separate(Address, c("address", "postal"), sep = "-")
-primary_schools_geocode = get_amenity_details(primary_schools$postal)
+primary_schools_geocode = get_amenity_details(unique(primary_schools$postal))
 primary_schools_geocode = primary_schools_geocode %>% 
-  filter(lat <= 1.299641 | lat >= 1.299642) # Remove the default values 
+  filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
+  na.omit()
 # write.csv(primary_schools_geocode, "backend/processed_data/primary_schools_geocode.csv")
 
-# Hospitals Geo Coordinates
-# web data scraping of list of hospitals 
-library(rvest)
-
-url <- "https://en.wikipedia.org/wiki/List_of_hospitals_in_Singapore"
-# Find all HTML tables on the page
-tables <- read_html(url) %>% html_elements("table")
-# Number of tables available
-length(tables)
-
-#convert the second table to a tibble
-records1 = tables[[1]] %>% html_table()
-records2 = tables[[2]] %>% html_table()
-hospitals <- rbind(records1, records2) %>%
-  select(-Opened, -Ownership, -Beds, -Staff) %>%
-  mutate(postal = c(529889, 229899, 544886, 169608, 768828, 308433, 159964, 119074, 609606, 574623,  289891,217562, 258500, 228510, 329563, 427990, 188770, 307677, 547530, 168582, 544835, 768024, 609606, 569766, 329562, 529895, 659674))
-# write.csv(hospitals, "backend/raw_data/hospitals.csv")
+# # Hospitals Geo Coordinates
+# # Web data scraping of list of hospitals 
+# library(rvest)
+# 
+# url <- "https://en.wikipedia.org/wiki/List_of_hospitals_in_Singapore"
+# # Find all HTML tables on the page
+# tables <- read_html(url) %>% html_elements("table")
+# # Number of tables available
+# length(tables)
+# 
+# #convert the second table to a tibble
+# records1 = tables[[1]] %>% html_table()
+# records2 = tables[[2]] %>% html_table()
+# hospitals <- rbind(records1, records2) %>%
+#   select(-Opened, -Ownership, -Beds, -Staff) %>%
+#   mutate(postal = c(529889, 229899, 544886, 169608, 768828, 308433, 159964, 119074, 609606, 574623,  289891,217562, 258500, 228510, 329563, 427990, 188770, 307677, 547530, 168582, 544835, 768024, 609606, 569766, 329562, 529895, 659674))
+# # write.csv(hospitals, "backend/raw_data/hospitals.csv")
 
 hospitals = read.csv("backend/raw_data/hospitals.csv")
-hospitals_geocode <- get_amenity_details(hospitals$postal)
+hospitals_geocode <- get_amenity_details(unique(hospitals$postal)) %>% 
+  filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
+  na.omit()
 # write.csv(hospitals_geocode, "backend/processed_data/hospitals_geocode.csv")
 
 ##########################################################################################
@@ -304,12 +314,101 @@ cbd_coords = c(cbd_long,cbd_lat)
 lat_long_postal_xy <- lat_long_postal_xy %>%
   mutate(dist_cbd = distHaversine(cbd_coords, cbind(long, lat))/1000) %>% 
   mutate(postal_2dig = as.character(str_sub(as.character(postal),1,2)))
-# write.csv(lat_long_postal_xy, "backend/processed_data/lat_long_for_visualisation.csv")
 
+# Merge lat_long_postal_xy dataset with HDB resale flats to get the lease commence date for 
+# each block
+hdb_lease = read.csv("backend/processed_data/hdb_prices_with_address.csv") %>% 
+  select(address,lease_commence_date) %>%
+  unique()
+
+lat_long_postal_xy = lat_long_postal_xy %>% 
+  left_join(hdb_lease, by = c("street" = "address"))
+
+# write.csv(lat_long_postal_xy, "backend/processed_data/lat_long_for_visualisation.csv")
 # lat_long_postal_xy = read.csv("backend/processed_data/lat_long_for_visualisation.csv") %>% select(-1)
+
 lat_long_postal_xy = lat_long_postal_xy %>%
   select(-c(starts_with("nearest"),x,y,lat,long,postal))
 # write.csv(lat_long_postal_xy, "backend/processed_data/lat_long_for_analysis.csv")
+##########################################################################################
+# Data Cleaning to get the proper MRT and Primary School names to assist visualisations
+primary_schools = read.csv("backend/raw_data/primary_schools.csv") %>% select(-1)
+primary_schools <- primary_schools %>% mutate(Address = str_replace(Address, ", S", "-")) %>%
+  separate(Address, c("address", "postal"), sep = "-") %>% 
+  transmute(primary_school_name = Primary.School, postal_primary = postal)
+
+get_onemap_mrt <- function(id) {
+  base_url <- "https://www.onemap.gov.sg/api/common/elastic/search?searchVal="
+  endpoint <- "&returnGeom=Y&getAddrDetails=Y"
+  resource_url <- paste0(base_url, as.character(id), endpoint)
+  
+  # Make the GET request with the access token in the header
+  res <- GET(resource_url,
+             add_headers(Authorization = paste("Bearer", Sys.getenv("ONEMAP_KEY"))),
+             accept("application/json"))
+  
+  # Check the status code
+  if (res$status_code == 200) {
+    # Parse the response content
+    res_list <- content(res, type = "text") %>%
+      fromJSON(flatten = TRUE)
+    
+    # Convert response to tibble
+    df <- as_tibble(res_list$results)
+    mrt = df$BUILDING[grep("\\(", df$BUILDING)]
+    if (is.null(mrt)) {
+      return("SINGAPORE MRT")
+    }
+    return(mrt[1])
+  } else {
+    # cat("Error: Request for ID", id, "failed with status code", res$status_code, "\n")
+    return("SINGAPORE MRT")
+  }
+}
+
+get_onemap_mrt_address <- function(id) {
+  base_url <- "https://www.onemap.gov.sg/api/common/elastic/search?searchVal="
+  endpoint <- "&returnGeom=Y&getAddrDetails=Y"
+  resource_url <- paste0(base_url, as.character(id), endpoint)
+  
+  # Make the GET request with the access token in the header
+  res <- GET(resource_url,
+             add_headers(Authorization = paste("Bearer", Sys.getenv("ONEMAP_KEY"))),
+             accept("application/json"))
+  
+  # Check the status code
+  if (res$status_code == 200) {
+    # Parse the response content
+    res_list <- content(res, type = "text") %>%
+      fromJSON(flatten = TRUE)
+    
+    # Convert response to tibble
+    df <- as_tibble(res_list$results)
+    return(df$ADDRESS[1])
+  } else {
+    # cat("Error: Request for ID", id, "failed with status code", res$status_code, "\n")
+    return("SINGAPORE MRT")
+  }
+}
+
+mrt = read_excel("backend/raw_data/Train Station Codes and Chinese Names.xls") %>%
+  rowwise() %>% 
+  mutate(mrt_name = get_onemap_mrt(stn_code), mrt_address = get_onemap_mrt_address(stn_code)) %>% 
+  select(mrt_name, mrt_address)
+mrt = mrt %>% unique()
+
+hdb_blocks = read.csv("backend/processed_data/lat_long_for_visualisation.csv") %>% select(-1)
+hdb_blocks = hdb_blocks %>% 
+  mutate(postal_code_nearest_primary = substr(nearest_primary_schools,
+                                              nchar(nearest_primary_schools) - 5, 
+                                              nchar(nearest_primary_schools))) %>%
+  mutate(postal_code_nearest_mrt = substr(nearest_mrt,
+                                          nchar(nearest_mrt) - 5, 
+                                          nchar(nearest_mrt))) %>%
+  left_join(primary_schools, by = c("postal_code_nearest_primary" = "postal_primary")) %>%
+  left_join(mrt, by = c("nearest_mrt" = "mrt_address")) 
+
+# write.csv(hdb_blocks, "backend/processed_data/unique_hdb_block_details_w_schools_mrt_name.csv")
 ##########################################################################################
 # Test Example of ONEMAP API Call
 # Construct the API request URL 

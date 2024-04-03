@@ -44,11 +44,12 @@ data <- data %>%
   separate(storey_range, into = c("lower_storey","upper_storey"), sep = " TO ") %>%
   mutate(ave_storey = as.numeric(lower_storey) + as.numeric(upper_storey)) %>%
   select(-c(lower_storey,upper_storey))
+# write.csv(data, "backend/processed_data/hdb_prices_with_address.csv")
 
 # Merge the HDB resale data with the lat_long_postal_xy dataset
 lat_long_postal_xy = read.csv("backend/processed_data/lat_long_for_analysis.csv") %>% 
-  mutate(postal_2dig = as.character(postal_2dig)) %>%
-  select(-1)
+  select(-1) %>%
+  select(-lease_commence_date)
 
 # Merge the HDB resale set with geospatial data
 data_merged <- data %>%
@@ -86,7 +87,8 @@ convert_to_categorical <- function(data, char_columns) {
 }
 
 data_merged <- convert_to_categorical(data_merged, cat_columns)
-# Remove redundant columns from our data_merged
+
+# Remove redundant columns for regression from our data_merged
 data_merged <- data_merged %>%
   select(-c(block,street_name,lease_commence_date,address))
 
@@ -125,12 +127,3 @@ one_hot_encoding <- function(data, column_names) {
 data_cleaned <- one_hot_encoding(data_merged, get_categorical_columns(data_merged))
 
 # write.csv(data_cleaned, "backend/processed_data/hdb_resale_prices.csv")
-
-# Get the details for each HDB block for visualisation purposes
-lat_long_vis <- read.csv("backend/processed_data/lat_long_for_visualisation.csv") %>% select(-1)
-data_for_vis <- data %>%
-  select(c(town,lease_commence_date,address))
-HDB_details <- lat_long_vis %>%
-  left_join(data_for_vis, by = c("street" = "address")) %>%
-  unique()
-# write.csv(HDB_details, "backend/processed_data/hdb_block_details.csv")
