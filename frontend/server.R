@@ -63,5 +63,26 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  output$homeOutput <- renderText({
+    "
+
+Introduction 
+
+First-time home buyers frequently face challenges such as planning their budget, selecting a suitable location, and understanding the dynamics of the property market.
+
+Traditionally, house prices have been thought to reflect their proximity to urban centers, transportation networks, and amenities. Yet, the real connection between a property's practical benefits and its market value can be obscured by casual discussions or the perspectives of sales agents.
+
+Our aim is to resolve these issues by providing buyers with crucial knowledge, enabling them to make informed decisions when purchasing their ideal home. This, in turn, reduces their reliance on external intermediaries like property agents.
+
+
+Data Sources
+
+Our data are meticulously curated from a variety of sources to ensure a balanced and precise experience for users of our website:
+1. HDB Resale Prices and Transaction History: Acquired from the authoritative database at data.gov.sg, offering insight into historical trends and current market values.
+
+2. Amenities, Transportation Links, and Proximity to the Central Business District (CBD): Sourced from OneMap.sg, this data provides comprehensive details on local infrastructure, enhancing our understanding of property desirability and accessibility.
+
+3. Demographic and Household Data: Compiled from the Singapore Department of Statistics, offering a detailed overview of demographic shifts and household compositions, pivotal for informed decision-making in the property market."
+})
   
 })
