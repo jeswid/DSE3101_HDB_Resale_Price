@@ -43,6 +43,8 @@ test_ml <- test_data %>% mutate(log_price = log(resale_price)) %>%
 
 ## Benchmark OLS model (Based on domain knowledge)
 ```{r}
+set.seed(42)
+
 # Based on domain knowledge, we picked a few variables that affect HDB prices
 regfit = lm(formula= log_price ~ year + remaining_lease + floor_area_sqm + ave_storey +
            + dist_to_nearest_mrt + dist_to_nearest_primary_schools + dist_cbd,data=train_ml)
@@ -63,6 +65,7 @@ summary(regfit)
 
 ## OLS on all variables
 ```{r}
+set.seed(42)
 # Perform linear regression on all the covariates in the training data
 model <- lm(log_price ~ ., data = train_ml)
  
@@ -81,6 +84,7 @@ summary(model)
 ## Machine Learning Techniques
 ### Regression Trees: 
 ```{r}
+set.seed(42)
 # Load the package 
 library(rpart) 
 
@@ -108,6 +112,7 @@ print(paste("RMSE for Regression Trees:", rmse_rt))
 ### Random Forest
 ### Tuning
 ```{r}
+set.seed(42)
 # Now try the Random forest. To go from bagging to proper random forest, we 
 # need to add the option mtry - number of predictors randomly sampled for each tree: 
 # Here we set mtry= P/3 to reflect the default choice of P/3 for regression problems. 
@@ -128,8 +133,10 @@ for(i in 1:nset) {
 
 # We pick ntree = 500 as our tuning parameter given the faster runtime, as the improvement in RMSE by using ntree = 1000 is negligible (only 0.0001 improvement)
 ```
+
 ### Model with tuned parameters
 ```{r}
+set.seed(42)
 rffit = randomForest(log_price~.,data=train_ml,ntree=500, mtry= 138/3) 
 
 plot(rffit) #plot the OOB error 
@@ -153,7 +160,9 @@ saveRDS(rffit, file = "RandomForest.rds")
 
 ### Bagging
 ```{r}
-bagfit = randomForest(log_price~.,data=train_ml,ntree=500,maxnodes=10,mtry=138)
+set.seed(42)
+#we use the same n_tree for both rf and bagging
+bagfit = randomForest(log_price~.,data=train_ml, ntree=500, mtry=138)
 
 plot(bagfit) #plot the OOB error 
 
@@ -169,6 +178,7 @@ print(paste("RMSE for Bagging:", rmse_bag))
 
 # Traditional Gradient Boosting Machine (GBM)
 ```{r}
+set.seed(42)
 # Load the gbm package
 library(gbm)
 
@@ -222,32 +232,36 @@ print("Best number of trees:", best_ntree, "\n")
 print("Best interaction depth:", best_interaction_depth, "\n")
 print("Best cross-validated MSE:", best_performance, "\n")
 
-#best number of trees: 1000
+#best number of trees: 1000, can choose 1000 trees bc for GBM, the runtime for 1000 trees is not painfully long.
 #best interaction depth: 5
 #best CV MSE = 0.008329
 ```
 
 # fit Traditional Gradient Boosting with optimal hyperparameters
 ```{r}
+set.seed(42)
+best_interaction_depth = 5
+best_ntree = 1000
+
 # Train final GBM model with best hyperparameters on the entire training set
 final_gbm_model <- gbm(log_price ~ ., data = train_ml, distribution = 'gaussian',
                         interaction.depth = best_interaction_depth, n.trees = best_ntree,
                         shrinkage = 0.01, cv.folds = 10)
       
 # Make predictions on test data
-predictions_gbm <- predict(final_gbm_model, (test_ml%>%select(-log_price)), n.trees = best_ntree_gbm, type = "response")
+predictions_gbm <- predict(final_gbm_model, (test_ml%>%select(-log_price)), n.trees = best_ntree, type = "response")
       
 # Calculate RMSE
 rmse_gbm <- sqrt(mean((test_ml$log_price - predictions_gbm)^2))
 
 print(paste("RMSE for Gradient Boosting: ", rmse_gbm))
+#RMSE for GBM: 0.0910988932316018
 ```
-
-
 ## Hedonic price function using post-LASSO and feature engineering
 # ML model
 #suggested by Denis
 ```{r}
+set.seed(42)
 library(hdm)
 
 plasso = rlasso(y~., data=train_ml,penalty=list(X.dependent.lambda=FALSE, homoscedastic=FALSE),  post=TRUE)
@@ -266,6 +280,7 @@ print(paste("RMSE for hedonic Post Lasso Regression:", rmse_plasso))
 ### XG Boost For Feature Engineering
 ### Tuning (This code is taking too long to run)
 ```{r}
+set.seed(42)
 library(xgboost) 
 library(recipes)
 xgb_prep <- recipe(log_price ~ ., data = train_ml) %>%
@@ -325,6 +340,7 @@ hyper_grid %>%
 
 ### Model with tuned parameters
 ```{r}
+set.seed(42)
 library(xgboost) 
 library(recipes)
 xgb_train <- recipe(log_price ~ ., data = train_ml) %>%
