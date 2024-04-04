@@ -60,7 +60,7 @@ print(paste("RMSE for benchmark OLS:", rmse_ols))
 
 summary(regfit)
 
-# RMSE for benchmark OLS: 0.134601734113644
+# RMSE for benchmark OLS: 0.13494298953176
 ```
 
 ## OLS on all variables
@@ -79,6 +79,8 @@ rmse_ols <- sqrt(mean((test_ml$log_price - predictions)^2))
 print(paste("RMSE for benchmark OLS:", rmse_ols))
 
 summary(model)
+
+"RMSE for benchmark OLS: 0.101444188424559"
 ```
 
 ## Machine Learning Techniques
@@ -106,7 +108,7 @@ rmse_rt <- sqrt(mean((test_ml$log_price - predictions_rt)^2))
 # Print RMSE
 print(paste("RMSE for Regression Trees:", rmse_rt))
 
-# RMSE for Regression Trees: 0.183065940719009
+# RMSE for Regression Trees: 0.185634606041432
 ```
 
 ### Random Forest
@@ -128,10 +130,11 @@ for(i in 1:nset) {
   print(paste("RMSE for Random Forest","(trees:", ntreev[i],"):", rmse_rt))
 }
 
-# RMSE for Random Forest (trees: 500): 0.0596255499215339
-# RMSE for Random Forest: (trees: 1000) 0.0596221301154754
+"RMSE for Random Forest (trees: 500 ): 0.0631002694924144"
 
-# We pick ntree = 500 as our tuning parameter given the faster runtime, as the improvement in RMSE by using ntree = 1000 is negligible (only 0.0001 improvement)
+"RMSE for Random Forest (trees: 1000 ): 0.0631247324693827"
+
+# We pick ntree = 500 due to both faster runtime and lower RMSE.
 ```
 
 ### Model with tuned parameters
@@ -155,7 +158,7 @@ saveRDS(rffit, file = "RandomForest.rds")
 
 #  rffit = readRDS("RandomForest.rds")
 
-# RMSE for Random Forest: 0.0596187125408457 
+# RMSE for Random Forest: 0.0631002694924144 
 ```
 
 ### Bagging
@@ -257,6 +260,7 @@ rmse_gbm <- sqrt(mean((test_ml$log_price - predictions_gbm)^2))
 print(paste("RMSE for Gradient Boosting: ", rmse_gbm))
 #RMSE for GBM: 0.0910988932316018
 ```
+
 ## Hedonic price function using post-LASSO and feature engineering
 # ML model
 #suggested by Denis
