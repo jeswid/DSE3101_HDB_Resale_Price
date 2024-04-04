@@ -17,7 +17,7 @@ library(randomForest)
 # Set seed for reproducibility
 set.seed(42)
 
-hdb_data = read.csv("processed_data/hdb_resale_prices.csv") %>% 
+hdb_data = readRDS("processed_data/hdb_resale_prices.RDS") %>% 
   select(-1)
 
 # Stratified Sampling by 'year'
@@ -158,7 +158,7 @@ saveRDS(rffit, file = "RandomForest.rds")
 
 #  rffit = readRDS("RandomForest.rds")
 
-# RMSE for Random Forest: 0.0631002694924144 
+# RMSE for Random Forest: 0.0631002694924144z 
 ```
 
 ### Bagging
