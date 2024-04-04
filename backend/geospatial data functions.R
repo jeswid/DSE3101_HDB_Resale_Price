@@ -75,12 +75,18 @@ get_details <- function(unique_addresses) {
 }
 
 # HDB Geo Coordinates
-data_tidy = read.csv("backend/processed_data/hdb_prices_with_address.csv") %>% select(-1)
+data_tidy = readRDS("backend/processed_data/hdb_prices_with_address.Rds") 
 lat_long_postal_xy = get_details(unique(data_tidy$address))
 lat_long_postal_xy = lat_long_postal_xy %>%
   filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
   na.omit()
-# write.csv(lat_long_postal_xy, "backend/processed_data/lat_long_postal_xy.csv")
+
+# Replace irregular postal code "data "NIL" with postal code in reality
+lat_long_postal_xy[1280,]$postal = as.character("680216")
+lat_long_postal_xy[7151,]$postal = as.character("680215")
+
+# Saved to RDS to preserve column classes
+# saveRDS(lat_long_postal_xy,"backend/processed_data/lat_long_postal_xy.Rds") 
 
 ##########################################################################################
 # Creating Geo-coordinates of nearby amenities for each HDB block
@@ -160,7 +166,7 @@ mrt_geocode = mrt_geocode %>%
   filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
   unique() %>% 
   na.omit()
-# write.csv(mrt_geocode, "backend/processed_data/mrt_geocode.csv")
+# saveRDS(mrt_geocode,"backend/processed_data/mrt_geocode.Rds") 
 
 # Supermarkets Geo Coordinates
 supermarkets = read.csv("backend/raw_data/ListofSupermarketLicences.csv")
@@ -168,7 +174,7 @@ supermarkets_geocode = get_amenity_details(unique(supermarkets$postal_code))
 supermarkets_geocode = supermarkets_geocode %>% 
   filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
   na.omit()
-# write.csv(supermarkets_geocode, "backend/processed_data/supermarkets_geocode.csv")
+# saveRDS(supermarkets_geocode,"backend/processed_data/supermarkets_geocode.Rds") 
 
 # Hawker centers Geo Coordinates
 hawker_centers = read.csv("backend/raw_data/ListofGovernmentMarketsHawkerCentres.csv")
@@ -182,7 +188,7 @@ hawker_centers_geocode = get_amenity_details(unique(hawkers$postal))
 hawker_centers_geocode = hawker_centers_geocode %>% 
   filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
   na.omit()
-# write.csv(hawker_centers_geocode, "backend/processed_data/hawker_centres_geocode.csv")
+# saveRDS(hawker_centers_geocode,"backend/processed_data/hawker_centers_geocode.Rds") 
 
 # Primary Schools Geo Coordinates
 primary_schools = read.csv("backend/raw_data/primary_schools.csv")
@@ -192,7 +198,7 @@ primary_schools_geocode = get_amenity_details(unique(primary_schools$postal))
 primary_schools_geocode = primary_schools_geocode %>% 
   filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
   na.omit()
-# write.csv(primary_schools_geocode, "backend/processed_data/primary_schools_geocode.csv")
+# saveRDS(primary_schools_geocode,"backend/processed_data/primary_schools_geocode.Rds") 
 
 # # Hospitals Geo Coordinates
 # # Web data scraping of list of hospitals 
@@ -216,7 +222,7 @@ hospitals = read.csv("backend/raw_data/hospitals.csv")
 hospitals_geocode <- get_amenity_details(unique(hospitals$postal)) %>% 
   filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
   na.omit()
-# write.csv(hospitals_geocode, "backend/processed_data/hospitals_geocode.csv")
+# saveRDS(hospitals_geocode,"backend/processed_data/hospitals_geocode.Rds") 
 
 ##########################################################################################
 # Getting distance to nearest amenities (Creating the respective tables)
@@ -246,56 +252,59 @@ find_nearest <- function(house, amenity, radius=1) {
   return(results)
 }
 
-lat_long_postal_xy <- read.csv("backend/processed_data/lat_long_postal_xy.csv") %>% 
-  select(-1) 
-mrt_geocode = read.csv("backend/processed_data/mrt_geocode.csv") %>% select(-1)
-supermarkets_geocode = read.csv("backend/processed_data/supermarkets_geocode.csv") %>% select(-1)
-hawker_centers_geocode = read.csv("backend/processed_data/hawker_centres_geocode.csv") %>% select(-1)
-primary_schools_geocode = read.csv("backend/processed_data/primary_schools_geocode.csv") %>% select(-1)
-hospitals_geocode = read.csv("backend/processed_data/hospitals_geocode.csv") %>% select(-1)
+lat_long_postal_xy <- readRDS("backend/processed_data/lat_long_postal_xy.Rds") 
+mrt_geocode = readRDS("backend/processed_data/mrt_geocode.Rds") 
+supermarkets_geocode = readRDS("backend/processed_data/supermarkets_geocode.Rds") 
+hawker_centers_geocode = readRDS("backend/processed_data/hawker_centers_geocode.Rds") 
+primary_schools_geocode = readRDS("backend/processed_data/primary_schools_geocode.Rds") 
+hospitals_geocode = readRDS("backend/processed_data/hospitals_geocode.Rds") 
 
 # Call the find_nearest function with the sample data
 nearest_mrt <- find_nearest(lat_long_postal_xy, mrt_geocode)
 nearest_mrt <- nearest_mrt %>%
+  mutate(Distance = as.numeric(Distance), Amenity_Count = as.numeric(Amenity_Count)) %>%
   rename(c("nearest_mrt" = "Nearest_Amenity", "dist_to_nearest_mrt" = "Distance", 
            "mrt_1km" = "Amenity_Count"))
-# write.csv(nearest_mrt, "backend/processed_data/nearest_mrt.csv")
+# saveRDS(nearest_mrt, "backend/processed_data/nearest_mrt.Rds") 
 
 nearest_supermarket <- find_nearest(lat_long_postal_xy, supermarkets_geocode)
 nearest_supermarket <- nearest_supermarket %>%
+  mutate(Distance = as.numeric(Distance), Amenity_Count = as.numeric(Amenity_Count)) %>%
   rename(c("nearest_supermarket" = "Nearest_Amenity", "dist_to_nearest_supermarket" = "Distance", 
            "supermarket_1km" = "Amenity_Count"))
-# write.csv(nearest_supermarket, "backend/processed_data/nearest_supermarket.csv")
+# saveRDS(nearest_supermarket, "backend/processed_data/nearest_supermarket.Rds") 
 
 nearest_hawkers <- find_nearest(lat_long_postal_xy, hawker_centers_geocode)
 nearest_hawkers <- nearest_hawkers %>%
+  mutate(Distance = as.numeric(Distance), Amenity_Count = as.numeric(Amenity_Count)) %>%
   rename(c("nearest_hawkers" = "Nearest_Amenity", "dist_to_nearest_hawkers" = "Distance", 
            "hawkers_1km" = "Amenity_Count"))
-# write.csv(nearest_hawkers, "backend/processed_data/nearest_hawkers.csv")
+# saveRDS(nearest_hawkers, "backend/processed_data/nearest_hawkers.Rds") 
 
 nearest_primary_schools <- find_nearest(lat_long_postal_xy, primary_schools_geocode)
 nearest_primary_schools <- nearest_primary_schools %>%
+  mutate(Distance = as.numeric(Distance), Amenity_Count = as.numeric(Amenity_Count)) %>%
   rename(c("nearest_primary_schools" = "Nearest_Amenity", "dist_to_nearest_primary_schools" = "Distance", 
            "primary_schools_1km" = "Amenity_Count"))
-# write.csv(nearest_primary_schools, "backend/processed_data/nearest_primary_schools.csv")
+# saveRDS(nearest_primary_schools, "backend/processed_data/nearest_primary_schools.Rds") 
 
 nearest_hospital <- find_nearest(lat_long_postal_xy, hospitals_geocode)
 nearest_hospital <- nearest_hospital %>%
+  mutate(Distance = as.numeric(Distance), Amenity_Count = as.numeric(Amenity_Count)) %>%
   rename(c("nearest_hospital" = "Nearest_Amenity", "dist_to_nearest_hospital" = "Distance", 
            "hospitals_1km" = "Amenity_Count"))
-# write.csv(nearest_hospital, "backend/processed_data/nearest_hospital.csv")
+# saveRDS(nearest_hospital, "backend/processed_data/nearest_hospital.Rds") 
 
 ##########################################################################################
 # read in the lat_long_postal_xy table we created
-lat_long_postal_xy <- read.csv("backend/processed_data/lat_long_postal_xy.csv") %>% 
-  select(-1) 
+lat_long_postal_xy <- readRDS("backend/processed_data/lat_long_postal_xy.Rds")
 
 # Tables of nearest amenities 
-nearest_mrt = read.csv("backend/processed_data/nearest_mrt.csv") %>% select(-1)
-nearest_supermarket = read.csv("backend/processed_data/nearest_supermarket.csv") %>% select(-1)
-nearest_hawkers = read.csv("backend/processed_data/nearest_hawkers.csv") %>% select(-1)
-nearest_primary_schools = read.csv("backend/processed_data/nearest_primary_schools.csv") %>% select(-1)
-nearest_hospital = read.csv("backend/processed_data/nearest_hospital.csv") %>% select(-1)
+nearest_mrt = readRDS("backend/processed_data/nearest_mrt.Rds")
+nearest_supermarket = readRDS("backend/processed_data/nearest_supermarket.Rds") 
+nearest_hawkers = readRDS("backend/processed_data/nearest_hawkers.Rds")
+nearest_primary_schools = readRDS("backend/processed_data/nearest_primary_schools.Rds") 
+nearest_hospital = readRDS("backend/processed_data/nearest_hospital.Rds")
 
 # Left join the hdb block details with the nearest amenities 
 # MRT, Supermarket, Hawkers, Primary Schools, Hospitals
@@ -317,19 +326,23 @@ lat_long_postal_xy <- lat_long_postal_xy %>%
 
 # Merge lat_long_postal_xy dataset with HDB resale flats to get the lease commence date for 
 # each block
-hdb_lease = read.csv("backend/processed_data/hdb_prices_with_address.csv") %>% 
+hdb_lease = readRDS("backend/processed_data/hdb_prices_with_address.Rds") %>% 
   select(address,lease_commence_date) %>%
   unique()
 
 lat_long_postal_xy = lat_long_postal_xy %>% 
   left_join(hdb_lease, by = c("street" = "address"))
 
-# write.csv(lat_long_postal_xy, "backend/processed_data/lat_long_for_visualisation.csv")
-# lat_long_postal_xy = read.csv("backend/processed_data/lat_long_for_visualisation.csv") %>% select(-1)
+# saveRDS(lat_long_postal_xy, "backend/processed_data/lat_long_for_visualisation.Rds")
+# lat_long_postal_xy = readRDS("backend/processed_data/lat_long_for_visualisation.Rds")
 
 lat_long_postal_xy = lat_long_postal_xy %>%
-  select(-c(starts_with("nearest"),x,y,lat,long,postal))
-# write.csv(lat_long_postal_xy, "backend/processed_data/lat_long_for_analysis.csv")
+  select(-c(starts_with("nearest"),x,y,lat,long))
+# saveRDS(lat_long_postal_xy, "backend/processed_data/lat_long_for_prediction.Rds")
+
+lat_long_postal_xy = lat_long_postal_xy %>%
+  select(-postal)
+# saveRDS(lat_long_postal_xy, "backend/processed_data/lat_long_for_analysis.Rds")
 ##########################################################################################
 # Data Cleaning to get the proper MRT and Primary School names to assist visualisations
 primary_schools = read.csv("backend/raw_data/primary_schools.csv") %>% select(-1)
@@ -397,7 +410,7 @@ mrt = read_excel("backend/raw_data/Train Station Codes and Chinese Names.xls") %
   select(mrt_name, mrt_address)
 mrt = mrt %>% unique()
 
-hdb_blocks = read.csv("backend/processed_data/lat_long_for_visualisation.csv") %>% select(-1)
+hdb_blocks = readRDS("backend/processed_data/lat_long_for_visualisation.Rds")
 hdb_blocks = hdb_blocks %>% 
   mutate(postal_code_nearest_primary = substr(nearest_primary_schools,
                                               nchar(nearest_primary_schools) - 5, 
@@ -408,7 +421,7 @@ hdb_blocks = hdb_blocks %>%
   left_join(primary_schools, by = c("postal_code_nearest_primary" = "postal_primary")) %>%
   left_join(mrt, by = c("nearest_mrt" = "mrt_address")) 
 
-# write.csv(hdb_blocks, "backend/processed_data/unique_hdb_block_details_w_schools_mrt_name.csv")
+# saveRDS(hdb_blocks, "backend/processed_data/unique_hdb_block_details_w_schools_mrt_name.Rds")
 ##########################################################################################
 # Test Example of ONEMAP API Call
 # Construct the API request URL 

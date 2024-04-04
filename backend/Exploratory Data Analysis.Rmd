@@ -21,10 +21,9 @@ library(car)
 library(gridExtra)
 
 # load our cleaned dataset
-hdb_resale = read.csv("processed_data/hdb_resale_prices.csv") %>% select(-1)
-
+hdb_resale = readRDS("processed_data/hdb_resale_prices.Rds") 
 #load our cleaned dataset with only continuous variables
-hdb_resale_cont <- read.csv("processed_data/hdb_resale_continuous.csv") %>% select(-1)
+hdb_resale_cont <- readRDS("processed_data/hdb_resale_continuous.Rds") 
 ```
 
 ## Correlation matrix
@@ -143,8 +142,7 @@ find_outliers <- function(data, threshold = 1.5) {
 #check for outliers
 outliers <- find_outliers(hdb_resale_cont)
 
-box = boxplot(hdb_resale$log_resale_price)
-box 
+boxplot(hdb_resale$log_resale_price)
 
 hdb_resale = hdb_resale %>%
   select(-resale_price)
@@ -160,7 +158,7 @@ which(C>1)
 # plot median HDB resale prices by town, facet wrap by other categories
 
 #read in non transformed data
-hdb_ori <- read.csv("processed_data/hdb_merged_no_transform.csv") %>% select(-1)
+hdb_ori <- readRDS("processed_data/hdb_merged_no_transform.Rds")
 
 # Calculate median resale price by town
 median_prices <- aggregate(resale_price ~ town, hdb_ori, median)
