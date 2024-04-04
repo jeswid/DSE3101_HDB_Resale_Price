@@ -48,7 +48,7 @@ ui <- fluidPage(
                       # Sidebar content for geospatial analysis goes here (e.g., inputs, action buttons, etc.)
                       # It will only be visible when the Geospatial Analysis tab is active
                       div(id = "sidebar", class = "well",
-                          selectInput("addressM","Postal Code", choices = c(unique(all_address$postal))),
+                          selectInput("addressM","Postal Code", choices = c(unique(laty$postal))),
                           actionButton("submitmap", "Submit HDB 🔎", class = "btn-primary") ) ), ) ),
    
      
@@ -59,7 +59,7 @@ ui <- fluidPage(
                       # Content for Predicted Price tab
                       textOutput("priceOutput") )),
              div(id = "sidebar", class = "well",
-                 selectInput("address","Postal Code", choices = c(unique(all_address$postal))),
+                 selectInput("address","Postal Code", choices = c(unique(laty$postal))),
                  selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
                                                                       'New Generation', 'Maisonette', 'Apartment', 'Simplified',
                                                                       'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
