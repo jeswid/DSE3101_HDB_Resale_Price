@@ -41,9 +41,12 @@ train_ml <- train_data %>% mutate(log_price = log(resale_price)) %>%
 
 test_ml <- test_data %>% mutate(log_price = log(resale_price)) %>%
   select(-resale_price)
+test_ml_y <- test_ml[,"log_price"]
+test_ml <- test_ml %>%
+  select(-log_price)
 ```
 
-## Benchmark OLS model (Based on domain knowledge)
+### Benchmark OLS model (Based on domain knowledge)
 ```{r}
 set.seed(42)
 
@@ -55,7 +58,7 @@ regfit = lm(formula= log_price ~ year + remaining_lease + floor_area_sqm + ave_s
 predictions_ols <- predict(regfit, newdata = test_ml)
  
 # Calculate RMSE
-rmse_ols <- sqrt(mean((test_ml$log_price - predictions_ols)^2))
+rmse_ols <- sqrt(mean((test_ml_y - predictions_ols)^2))
  
 # Print RMSE
 print(paste("RMSE for benchmark OLS:", rmse_ols))
@@ -83,7 +86,7 @@ text(fit, use.n = TRUE, cex = .7)
 predictions_rt <- predict(fit, test_ml, method = "anova")
 
 # Calculate RMSE
-rmse_rt <- sqrt(mean((test_ml$log_price - predictions_rt)^2))
+rmse_rt <- sqrt(mean((test_ml_y - predictions_rt)^2))
  
 # Print RMSE
 print(paste("RMSE for Regression Trees:", rmse_rt))
@@ -103,16 +106,16 @@ ntreev = c(500, 1000)
 nset = length(ntreev) #number of cases for tree numbers - will determine number of iterations in the loop
 
 for(i in 1:nset) {
-  rffit = randomForest(log_price~.,data=train_ml,ntree=ntreev[i], mtry= 136/3)
+  rffit = randomForest(log_price~.,data=train_ml,ntree=ntreev[i], mtry= floor(136/3))
   predictions_rf <- predict(rffit, test_ml, method = "anova") 
   # Calculate RMSE 
-  rmse_rt <- sqrt(mean((test_ml$log_price - predictions_rf)^2)) 
+  rmse_rt <- sqrt(mean((test_ml_y - predictions_rf)^2)) 
   print(paste("RMSE for Random Forest","(trees:", ntreev[i],"):", rmse_rt))
 }
 
-"RMSE for Random Forest (trees: 500 ): 0.0631002694924144"
+# RMSE for Random Forest (trees: 500): 0.0641815677018226
 
-"RMSE for Random Forest (trees: 1000 ): 0.0631247324693827"
+# RMSE for Random Forest (trees: 1000 ): 0.0631247324693827
 
 # We pick ntree = 500 due to both faster runtime and lower RMSE.
 ```
@@ -120,7 +123,7 @@ for(i in 1:nset) {
 ### Model with tuned parameters
 ```{r}
 set.seed(42)
-rffit = randomForest(log_price~.,data=train_ml,ntree=10, mtry= 136/3) 
+rffit = randomForest(log_price~.,data=train_ml,ntree=500, mtry= floor(136/3)) 
 
 plot(rffit) #plot the OOB error 
 
@@ -128,17 +131,17 @@ plot(rffit) #plot the OOB error
 predictions_rf <- predict(rffit, test_ml, method = "anova") 
 
 # Calculate RMSE 
-rmse_rf <- sqrt(mean((test_ml$log_price - predictions_rf)^2)) 
+rmse_rf <- sqrt(mean((test_ml_y - predictions_rf)^2)) 
 
 # Print RMSE 
 print(paste("RMSE for Random Forest:", rmse_rf))
 
 # Saving the model
-saveRDS(rffit, file = "RandomForest.rds")
+# saveRDS(rffit, file = "RandomForest.rds")
 
-#  rffit = readRDS("RandomForest.rds")
+# rffit = readRDS("RandomForest.rds")
 
-# RMSE for Random Forest: 0.0631002694924144z 
+# RMSE for Random Forest: 0.0641815677018226
 ```
 
 ### Bagging
@@ -153,10 +156,16 @@ plot(bagfit) #plot the OOB error
 predictions_bag <- predict(bagfit, test_ml, method = "anova") 
 
 # Calculate RMSE 
-rmse_bag <- sqrt(mean((test_ml$log_price - predictions_bag)^2)) 
+rmse_bag <- sqrt(mean((test_ml_y - predictions_bag)^2)) 
 
 # Print RMSE 
 print(paste("RMSE for Bagging:", rmse_bag))
+
+# Saving the model
+# saveRDS(bagfit, file = "Bagging.rds")
+
+# bagfit = readRDS("Bagging.rds")
+# RMSE for Bagging: 0.0670008408203258
 ```
 
 # Traditional Gradient Boosting Machine (GBM)
@@ -213,9 +222,9 @@ print(paste("Best number of trees:", best_ntree))
 print(paste("Best interaction depth:", best_interaction_depth))
 print(paste("Best cross-validated MSE:", best_performance))
 
-#best number of trees: 1000, can choose 1000 trees bc for GBM, the runtime for 1000 trees is not painfully long.
-#best interaction depth: 5
-#best CV MSE = 0.0084000
+# best number of trees: 1000, can choose 1000 trees bc for GBM, the runtime for 1000 trees is not painfully long.
+# best interaction depth: 5
+# best CV MSE = 0.0084000
 ```
 
 # fit Traditional Gradient Boosting with optimal hyperparameters
@@ -230,18 +239,22 @@ final_gbm_model <- gbm(log_price ~ ., data = train_ml, distribution = 'gaussian'
                         shrinkage = 0.01, cv.folds = 10)
       
 # Make predictions on test data
-predictions_gbm <- predict(final_gbm_model, (test_ml%>%select(-log_price)), n.trees = best_ntree, type = "response")
+predictions_gbm <- predict(final_gbm_model, (test_ml), n.trees = best_ntree, type = "response")
       
 # Calculate RMSE
-rmse_gbm <- sqrt(mean((test_ml$log_price - predictions_gbm)^2))
+rmse_gbm <- sqrt(mean((test_ml_y - predictions_gbm)^2))
 
 print(paste("RMSE for Gradient Boosting: ", rmse_gbm))
-#RMSE for GBM: 0.0911088517943413
+
+# Saving the model
+# saveRDS(final_gbm_model, file = "GBM.rds")
+
+# final_gbm_model = readRDS("GBM.rds")
+
+# RMSE for Gradient Boosting: 0.0919899399523445
 ```
 
-## Hedonic price function using post-LASSO and feature engineering
-# ML model
-#suggested by Denis
+## Post-LASSO Regression
 ```{r}
 set.seed(42)
 
@@ -251,77 +264,15 @@ plasso = rlasso(log_price~., data=train_ml,penalty=list(X.dependent.lambda=FALSE
 predictions_plasso <- predict(plasso, newdata = test_ml)
  
 # Calculate RMSE
-rmse_plasso <- sqrt(mean((test_ml$log_price - predictions_plasso)^2))
+rmse_plasso <- sqrt(mean((test_ml_y - predictions_plasso)^2))
  
 # Print RMSE
-print(paste("RMSE for hedonic Post Lasso Regression:", rmse_plasso))
+print(paste("RMSE for Post Lasso Regression:", rmse_plasso))
 
-"RMSE for hedonic Post Lasso Regression: 0.103390701275358"
+# RMSE for Post Lasso Regression: 0.104452066137839
 ```
 
-
-### XG Boost For Feature Engineering
-### Tuning (This code is taking too long to run)
-```{r}
-set.seed(42)
-library(xgboost) 
-library(recipes)
-xgb_prep <- recipe(log_price ~ ., data = train_ml) %>%
-  step_integer(all_nominal()) %>%
-  prep(training = train_ml, retain = TRUE) %>%
-  juice()
-
-X_train <- as.matrix(xgb_prep[setdiff(names(xgb_prep), "log_price")])
-Y_train <- xgb_prep$log_price
-
-# hyperparameter grid
-hyper_grid <- expand.grid(
-  eta = 0.01,
-  max_depth = 3, 
-  min_child_weight = 3,
-  subsample = 0.5, 
-  colsample_bytree = 0.5,
-  gamma = c(0, 1, 10, 100),
-  lambda = c(0, 1e-2, 0.1, 1, 100),
-  alpha = c(0, 1e-2, 0.1, 1, 100),
-  rmse = 0,          # a place to dump RMSE results
-  trees = 0          # a place to dump required number of trees
-)
-
-# grid search
-for(i in seq_len(nrow(hyper_grid))) {
-  set.seed(42)
-  m <- xgb.cv(
-    data = X_train,
-    label = Y_train,
-    nrounds = 100,
-    objective = "reg:squarederror",
-    early_stopping_rounds = 50, 
-    nfold = 10,
-    verbose = 0,
-    params = list( 
-      eta = hyper_grid$eta[i], 
-      max_depth = hyper_grid$max_depth[i],
-      min_child_weight = hyper_grid$min_child_weight[i],
-      subsample = hyper_grid$subsample[i],
-      colsample_bytree = hyper_grid$colsample_bytree[i],
-      gamma = hyper_grid$gamma[i], 
-      lambda = hyper_grid$lambda[i], 
-      alpha = hyper_grid$alpha[i]
-    ) 
-  )
-  hyper_grid$rmse[i] <- min(m$evaluation_log$test_rmse_mean)
-  hyper_grid$trees[i] <- m$best_iteration
-}
-
-# results
-hyper_grid %>%
-  filter(rmse > 0) %>%
-  arrange(rmse) %>%
-  glimpse()
-```
-
-### Model with tuned parameters
+### XG Boost 
 ```{r}
 set.seed(42)
 library(xgboost) 
@@ -342,19 +293,16 @@ xgb.fit <- xgboost(
   objective = "reg:squarederror"
 )
 
-xgb_test <- recipe(log_price ~ ., data = test_ml) %>%
-  step_integer(all_nominal()) %>%
-  prep(training = train_ml, retain = TRUE) %>%
-  juice()
-X_test <- as.matrix(xgb_test[setdiff(names(xgb_test), "log_price")])
+X_test <- as.matrix(test_ml)
 
 predictions_xg <- predict(xgb.fit, X_test)
 
 # Calculate RMSE 
-rmse_xg <- sqrt(mean((test_ml$log_price - predictions_xg)^2)) 
+rmse_xg <- sqrt(mean((test_ml_y - predictions_xg)^2)) 
 
 # Print RMSE 
 print(paste("RMSE for XG Boost:", rmse_xg))
+# RMSE for XG Boost: 0.057909164860733
 
 # variable importance plot
 # Compute feature importance matrix
@@ -364,16 +312,22 @@ xgb.plot.importance(importance_matrix[1:7,])
 features_xg = importance_matrix$Feature[1:7] # we select the top 7 features
 
 formula <- as.formula(paste("log_price ~", paste(features_xg, collapse = " + ")))
-xg_ols = lm(formula, data = test_ml)
+xg_ols = lm(formula, data = train_ml)
 
 # Make predictions on the test data
 predictions_xgols <- predict(xg_ols, newdata = test_ml)
  
 # Calculate RMSE
-rmse_xgols <- sqrt(mean((test_ml$log_price - predictions_xgols)^2))
+rmse_xgols <- sqrt(mean((test_ml_y - predictions_xgols)^2))
  
 # Print RMSE
 print(paste("RMSE for XGBoost OLS:", rmse_xgols))
 
+# RMSE for XGBoost OLS: 0.128174207150794
 summary(xg_ols)
+
+# Saving the model
+# saveRDS(xgb.fit, file = "xgb.rds")
+
+# xgb.fit = readRDS("xgb.rds")
 ```
