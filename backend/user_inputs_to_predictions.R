@@ -42,6 +42,9 @@ one_hot_encoding <- function(data, column_names) {
     unique_values <- unique(data[[column_name]])
     # Create new columns for each unique value and populate with binary values
     for (value in unique_values) {
+      value = gsub(" ","_",value)
+      value = gsub("/","_",value)
+      value = gsub("-","_",value)
       binary_column <- as.integer(data[[column_name]] == value)
       new_column_name <- paste(column_name, value, sep = "_")
       data <- cbind(data, binary_column)

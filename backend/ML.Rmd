@@ -20,7 +20,7 @@ library(hdm)
 # Set seed for reproducibility
 set.seed(42)
 
-hdb_data = readRDS("processed_data/hdb_resale_prices.RDS") %>% select(-`month_01`, -`town_ANG MO KIO`, -`flat_type_2 ROOM`, -`flat_model_Improved`, -`postal_2dig_56`)
+hdb_data = readRDS("processed_data/hdb_resale_prices.RDS") 
 
 # Stratified Sampling by 'year'
 strata_cols <- c("year")
@@ -65,26 +65,6 @@ summary(regfit)
 # RMSE for benchmark OLS: 0.13494587838384
 ```
 
-## OLS on all variables
-```{r}
-set.seed(42)
-# Perform linear regression on all the covariates in the training data
-model <- lm(log_price ~ ., data = train_ml)
- 
-# Make predictions on the test data
-predictions <- predict(model, newdata = test_ml)
- 
-# Calculate RMSE
-rmse_ols <- sqrt(mean((test_ml$log_price - predictions)^2))
- 
-# Print RMSE
-print(paste("RMSE for benchmark OLS:", rmse_ols))
-
-summary(model)
-
-"RMSE for benchmark OLS: 0.101439426733381"
-```
-
 ## Machine Learning Techniques
 ### Regression Trees: 
 ```{r}
@@ -123,7 +103,7 @@ ntreev = c(500, 1000)
 nset = length(ntreev) #number of cases for tree numbers - will determine number of iterations in the loop
 
 for(i in 1:nset) {
-  rffit = randomForest(log_price~.,data=train_ml,ntree=ntreev[i], mtry= 138/3)
+  rffit = randomForest(log_price~.,data=train_ml,ntree=ntreev[i], mtry= 136/3)
   predictions_rf <- predict(rffit, test_ml, method = "anova") 
   # Calculate RMSE 
   rmse_rt <- sqrt(mean((test_ml$log_price - predictions_rf)^2)) 
@@ -140,7 +120,7 @@ for(i in 1:nset) {
 ### Model with tuned parameters
 ```{r}
 set.seed(42)
-rffit = randomForest(log_price~.,data=train_ml,ntree=500, mtry= 138/3) 
+rffit = randomForest(log_price~.,data=train_ml,ntree=10, mtry= 136/3) 
 
 plot(rffit) #plot the OOB error 
 
@@ -165,7 +145,7 @@ saveRDS(rffit, file = "RandomForest.rds")
 ```{r}
 set.seed(42)
 #we use the same n_tree for both rf and bagging
-bagfit = randomForest(log_price~.,data=train_ml, ntree=500, mtry=138)
+bagfit = randomForest(log_price~.,data=train_ml, ntree=500, mtry=136)
 
 plot(bagfit) #plot the OOB error 
 
