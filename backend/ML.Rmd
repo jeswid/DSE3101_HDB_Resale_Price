@@ -8,8 +8,11 @@ output: html_document
 ```{r warnings = FALSE}
 #load the required libraries
 library(tidyverse)
-library(caret)
 library(randomForest)
+library(rpart)
+library(VIM)
+library(gbm)
+library(hdm)
 ```
 
 ### Conduct stratified sampling and loading the train and test sets
@@ -17,8 +20,7 @@ library(randomForest)
 # Set seed for reproducibility
 set.seed(42)
 
-hdb_data = readRDS("processed_data/hdb_resale_prices.RDS") %>% 
-  select(-1)
+hdb_data = readRDS("processed_data/hdb_resale_prices.RDS") %>% select(-`month_01`, -`town_ANG MO KIO`, -`flat_type_2 ROOM`, -`flat_model_Improved`, -`postal_2dig_56`)
 
 # Stratified Sampling by 'year'
 strata_cols <- c("year")
@@ -60,7 +62,7 @@ print(paste("RMSE for benchmark OLS:", rmse_ols))
 
 summary(regfit)
 
-# RMSE for benchmark OLS: 0.13494298953176
+# RMSE for benchmark OLS: 0.13494587838384
 ```
 
 ## OLS on all variables
@@ -80,15 +82,13 @@ print(paste("RMSE for benchmark OLS:", rmse_ols))
 
 summary(model)
 
-"RMSE for benchmark OLS: 0.101444188424559"
+"RMSE for benchmark OLS: 0.101439426733381"
 ```
 
 ## Machine Learning Techniques
 ### Regression Trees: 
 ```{r}
 set.seed(42)
-# Load the package 
-library(rpart) 
 
 # Create decision tree using regression 
 fit <- rpart(log_price ~ .,  
@@ -182,8 +182,6 @@ print(paste("RMSE for Bagging:", rmse_bag))
 # Traditional Gradient Boosting Machine (GBM)
 ```{r}
 set.seed(42)
-# Load the gbm package
-library(gbm)
 
 # Define the parameter grid
 ntree_values <- c(500, 1000)  # Number of trees
@@ -212,7 +210,7 @@ for (ntree in ntree_values) {
 
     performance <- gbm.perf(gbm_model, method = "cv")
 
-    print(perf_plot)
+    print(gbm_perf_plot)
 
     
     # Manually calculate cross-validation error
@@ -231,13 +229,13 @@ for (ntree in ntree_values) {
 }
 
 # Print the best hyperparameters and performance
-print("Best number of trees:", best_ntree, "\n")
-print("Best interaction depth:", best_interaction_depth, "\n")
-print("Best cross-validated MSE:", best_performance, "\n")
+print(paste("Best number of trees:", best_ntree))
+print(paste("Best interaction depth:", best_interaction_depth))
+print(paste("Best cross-validated MSE:", best_performance))
 
 #best number of trees: 1000, can choose 1000 trees bc for GBM, the runtime for 1000 trees is not painfully long.
 #best interaction depth: 5
-#best CV MSE = 0.008329
+#best CV MSE = 0.0084000
 ```
 
 # fit Traditional Gradient Boosting with optimal hyperparameters
@@ -258,7 +256,7 @@ predictions_gbm <- predict(final_gbm_model, (test_ml%>%select(-log_price)), n.tr
 rmse_gbm <- sqrt(mean((test_ml$log_price - predictions_gbm)^2))
 
 print(paste("RMSE for Gradient Boosting: ", rmse_gbm))
-#RMSE for GBM: 0.0910988932316018
+#RMSE for GBM: 0.0911088517943413
 ```
 
 ## Hedonic price function using post-LASSO and feature engineering
@@ -266,9 +264,8 @@ print(paste("RMSE for Gradient Boosting: ", rmse_gbm))
 #suggested by Denis
 ```{r}
 set.seed(42)
-library(hdm)
 
-plasso = rlasso(y~., data=train_ml,penalty=list(X.dependent.lambda=FALSE, homoscedastic=FALSE),  post=TRUE)
+plasso = rlasso(log_price~., data=train_ml,penalty=list(X.dependent.lambda=FALSE, homoscedastic=FALSE),  post=TRUE)
 
 # Make predictions on the test data
 predictions_plasso <- predict(plasso, newdata = test_ml)
@@ -278,6 +275,8 @@ rmse_plasso <- sqrt(mean((test_ml$log_price - predictions_plasso)^2))
  
 # Print RMSE
 print(paste("RMSE for hedonic Post Lasso Regression:", rmse_plasso))
+
+"RMSE for hedonic Post Lasso Regression: 0.103390701275358"
 ```
 
 
