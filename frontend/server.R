@@ -64,6 +64,19 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  # function used to filter out the row for the user input
+  fittedprediction <- reactive({
+    completerow <- laty %>% 
+      filter(laty$postal == input$address)
+    
+    if(nrow(completerow) > 0) {
+      return(completerow)
+    } else {
+      return(data.frame(Street = "Street name not found"))
+    }
+    
+  })
+  
   
 
   output$geoSelectionOutput <- renderText({

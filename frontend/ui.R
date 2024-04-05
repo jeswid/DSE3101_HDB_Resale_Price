@@ -57,6 +57,7 @@ ui <- fluidPage(
      
  tabPanel("Predicted Price", value = "PredictedPrice",
              
+          
              fluidRow(
                column(12,
                       # Content for Predicted Price tab
@@ -73,8 +74,7 @@ ui <- fluidPage(
                              selected = "Model A"),
                  selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
                  sliderInput("storey","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
-                 checkboxGroupInput("amenities", "Select Amenities:", choices = c("Primary School","Hawker Center", "MRT Station", "Supermarket","Hospital"),inline = TRUE),
-                 
+
                           actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary") )),
     verbatimTextOutput("priceOutput") ))
  
