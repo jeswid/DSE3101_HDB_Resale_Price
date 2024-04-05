@@ -2,6 +2,9 @@ library(shiny)
 library(leaflet)
 library(shinyjs)
 
+min_sqm <- min(all_address$floor_area_sqm, na.rm = TRUE)
+max_sqm <- max(all_address$floor_area_sqm, na.rm = TRUE)
+
 ui <- fluidPage(
   useShinyjs(),  # Initialize shinyjs
   tags$head(
@@ -48,7 +51,7 @@ ui <- fluidPage(
                       # Sidebar content for geospatial analysis goes here (e.g., inputs, action buttons, etc.)
                       # It will only be visible when the Geospatial Analysis tab is active
                       div(id = "sidebar", class = "well",
-                          selectInput("addressM","Postal Code", choices = c(unique(all_address$postal))),
+                          selectInput("addressM","Postal Code", choices = c(unique(laty$postal))),
                           actionButton("submitmap", "Submit HDB 🔎", class = "btn-primary") ) ), ) ),
    
      
@@ -59,7 +62,10 @@ ui <- fluidPage(
                       # Content for Predicted Price tab
                       textOutput("priceOutput") )),
              div(id = "sidebar", class = "well",
-                 selectInput("address","Postal Code", choices = c(unique(all_address$postal))),
+                 sliderInput("floor_area_sqm", "Desired Square Meter",
+                             min =  min_sqm, max = max_sqm,
+                             value = round((min_sqm + max_sqm) / 2), round = TRUE),              
+                 selectInput("address","Postal Code", choices = c(unique(laty$postal))),
                  selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
                                                                       'New Generation', 'Maisonette', 'Apartment', 'Simplified',
                                                                       'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',

@@ -35,33 +35,46 @@ shinyServer(function(input, output, session) {
       addProviderTiles(providers$Esri.WorldStreetMap)
   })
   
+  # observeEvent(input$submitprice, {
+  #   output$priceOutput <- renderText({
+  #     paste("Your choice:", 
+  #           street_name(),",",input$flat_type, 
+  #           input$flat_modelM,"FLAT AT LEVEL", input$storey, sep = "\n")
+  #   })})
+    
   observeEvent(input$submitprice, {
     output$priceOutput <- renderText({
-      paste("Your choice:", 
-            street_name(),",",input$flat_type, 
-            input$flat_modelM,"FLAT AT LEVEL", input$storey, sep = "\n")
-    })})
-    
+      if(!is.null(input$address) && street_name() != "Street name not found") {
+        paste("Your choice:",
+              street_name(), ",", input$flat_type,
+              input$flat_modelM, "FLAT AT LEVEL", input$storey, sep = "\n")
+      } else {
+        "Please ensure a valid postal code is selected."
+      }
+    })
+  })
+
   street_name <- reactive({
-    # Find the row in the data where the postal code matches the input
-    matched_row <- all_address[all_address$postal == input$addressM, ]
+    matched_row <- laty[laty$postal == input$address, ]
     
-    # If there's a match, return the street name; otherwise, return NA or an informative message
     if(nrow(matched_row) > 0) {
       return(matched_row$street)
     } else {
-      return(NA) # Or return something like "Street name not found"
+      return("Street name not found")
     }
   })
   
-  # Output the street name
+  
+
   output$geoSelectionOutput <- renderText({
-    if(!is.null(input$addressM) && !is.na(street_name())) {
+    # Changed logic to handle "Street name not found"
+    if(!is.null(input$addressM) && street_name() != "Street name not found") {
       paste("You have selected:", street_name(), sep = "\n")
     } else {
       "Please select a valid postal code."
     }
   })
+  
   
   output$homeOutput <- renderUI({
     HTML(paste0('
