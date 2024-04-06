@@ -61,7 +61,7 @@ top_correlation_results <- data.frame(top_variable_pairs, Correlation_Value = to
 # Print the top correlated variable pairs
 print(top_correlation_results)
 
-model <- lm(resale_price ~ ., data = hdb_resale_cont)
+model <- lm(log(resale_price) ~ ., data = hdb_resale_cont)
 vif(model)
 ```
 
