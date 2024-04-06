@@ -2,8 +2,8 @@ library(shiny)
 library(leaflet)
 library(shinyjs)
 
-min_sqm <- min(all_address$floor_area_sqm, na.rm = TRUE)
-max_sqm <- max(all_address$floor_area_sqm, na.rm = TRUE)
+min_sqm <- min(all_address_pred$floor_area_sqm, na.rm = TRUE)
+max_sqm <- max(all_address_pred$floor_area_sqm, na.rm = TRUE)
 
 ui <- fluidPage(
   useShinyjs(),  # Initialize shinyjs
