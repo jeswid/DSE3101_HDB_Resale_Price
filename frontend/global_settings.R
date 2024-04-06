@@ -13,23 +13,23 @@ library('leaflet')
 library('RColorBrewer')
 library(sf)
 
+############# MAP DATA ###############
+SG_map = readRDS("frontend/data/SG_map.rds")
+all_address = read.csv("frontend/data/hdb_block_details.csv") %>%
+  rename(lng = long) %>%
+  rename("Primary School" = "primary_schools_1km")
+amenities = read.csv("frontend/data/lat_long_for_visualisation.csv")
+hawker_centres = read.csv("frontend/data/hawker_centres_geocode.csv")
+hospitals = read.csv("frontend/data/hospitals_geocode.csv")
+mrt = read.csv("frontend/data/hospitals_geocode.csv")
+pri_schs = read.csv("frontend/data/primary_schools_geocode.csv")
+supermarkets = read.csv("frontend/data/supermarkets_geocode.csv")
 
-laty = readRDS("~/Desktop/GIT/DSE_3101_HSB_Resale_Price/backend/processed_data/lat_long_for_prediction.Rds")
-SG_map = readRDS("data/SG_map.rds")
-all_address = readRDS("~/Desktop/GIT/DSE_3101_HSB_Resale_Price/backend/processed_data/hdb_merged_no_transform.Rds")
-# all_address = read.csv("data/hdb_block_details.csv") %>%
-#   rename(lng = long) %>%
-#   rename("Primary School" = "primary_schools_1km")
-amenities = read.csv("data/lat_long_for_visualisation.csv")
-hawker_centres = read.csv("data/hawker_centres_geocode.csv")
-hospitals = read.csv("data/hospitals_geocode.csv")
-mrt = read.csv("data/hospitals_geocode.csv")
-pri_schs = read.csv("data/primary_schools_geocode.csv")
-supermarkets = read.csv("data/supermarkets_geocode.csv")
-median_resale_prices = read.csv("data/hdb_merged_no_transform.csv") %>%
-  select(`resale_price`, town, year, flat_type) %>%
-  filter(year == "2023") %>%
-  group_by(year, town, flat_type) %>%
-  summarise(median_price = median(resale_price))
+
+############# PREDICTION DATA ###############
+laty = readRDS("frontend/data/lat_long_for_prediction.Rds")
+all_address_pred = readRDS("frontend/data/hdb_merged_no_transform.Rds")
+
+
 
 
