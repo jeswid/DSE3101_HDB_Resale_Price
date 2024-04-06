@@ -1,5 +1,6 @@
 # Converting the user inputs into model output
 library(plyr)
+library(tidyverse)
 
 # Fit the obs with 136 variables into the ML model (Does not include resale prices)
 # Below is a sample observation
@@ -64,6 +65,31 @@ sample_obs_transformed <- one_hot_encoding(sample_obs_before_encoding,
 
 df = readRDS("backend/processed_data/hdb_resale_prices.Rds")[1,] %>% 
   select(-resale_price)
-newdata = rbind.fill(sample_obs_transformed, df)
+hdb = readRDS("backend/processed_data/lat_long_for_prediction.Rds") 
+hdb = hdb[1,]
 
-# prediction <- exp(predict(regfit, newdata = your_line_of_data))
+a = hdb %>% select(-c(postal,street)) %>%
+  mutate(ave_storey = 5,
+         flat_model = "2-room",
+         flat_type = "1 ROOM",
+         floor_area_sqm = 44,
+         year = 2024, 
+         month = "03", 
+         remaining_lease = 99 - as.numeric(2024 - lease_commence_date - as.numeric("3")/12)) %>%
+  select(-lease_commence_date)
+a <- convert_to_categorical(a,get_categorical_columns(a))
+
+a <- one_hot_encoding(a, get_categorical_columns(a))
+df = readRDS("backend/processed_data/hdb_resale_prices.Rds")[1,] %>% 
+  select(-resale_price)
+
+# saveRDS(df, "backend/processed_data/sample_obs_inputs.Rds")
+newdata = rbind.fill(df, a)
+newdata[is.na(newdata)] <- 0
+newdata = newdata[2,]
+
+xgb.fit = readRDS("backend/xgb.rds")
+newdata = as.matrix(newdata)
+prediction <- exp(predict(xgb.fit, newdata))
+prediction
+                  

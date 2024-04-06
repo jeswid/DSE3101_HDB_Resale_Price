@@ -29,7 +29,8 @@ supermarkets = read.csv("frontend/data/supermarkets_geocode.csv")
 ############# PREDICTION DATA ###############
 laty = readRDS("frontend/data/lat_long_for_prediction.Rds")
 all_address_pred = readRDS("frontend/data/hdb_merged_no_transform.Rds")
-
+sample_df = readRDS("frontend/data/sample_obs_inputs.Rds")
+model = readRDS("frontend/xgb.rds")
 
 
 

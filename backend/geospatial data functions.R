@@ -338,11 +338,17 @@ lat_long_postal_xy = lat_long_postal_xy %>%
 
 lat_long_postal_xy = lat_long_postal_xy %>%
   select(-c(starts_with("nearest"),x,y,lat,long))
-# saveRDS(lat_long_postal_xy, "backend/processed_data/lat_long_for_prediction.Rds")
+hdb_town = data_tidy %>% select(town, address)
+lat_long_postal_prediction = lat_long_postal_xy %>% 
+  left_join(hdb_town, by = c("street" = "address")) %>%
+  unique()
+# saveRDS(lat_long_postal_prediction, "backend/processed_data/lat_long_for_prediction.Rds")
 
 lat_long_postal_xy = lat_long_postal_xy %>%
   select(-postal)
 # saveRDS(lat_long_postal_xy, "backend/processed_data/lat_long_for_analysis.Rds")
+
+
 ##########################################################################################
 # Data Cleaning to get the proper MRT and Primary School names to assist visualisations
 primary_schools = read.csv("backend/raw_data/primary_schools.csv") %>% select(-1)
