@@ -421,6 +421,8 @@ hdb_blocks = hdb_blocks %>%
   left_join(primary_schools, by = c("postal_code_nearest_primary" = "postal_primary")) %>%
   left_join(mrt, by = c("nearest_mrt" = "mrt_address")) 
 
+# write.csv(hdb_blocks, "backend/processed_data/unique_hdb_block_details_w_schools_mrt_name.csv") 
+# Note: csv is for frontend usage
 # saveRDS(hdb_blocks, "backend/processed_data/unique_hdb_block_details_w_schools_mrt_name.Rds")
 ##########################################################################################
 # Test Example of ONEMAP API Call
