@@ -332,66 +332,48 @@ summary(xg_ols)
 # xgb.fit = readRDS("xgb.rds")
 ```
 
-### h step ahead forecast using Random Forest
+### h step ahead forecast using XGBoost
+
 ```{r}
-library(randomForest)
-library(forecast)
-
-# Assuming you have train_ml and test_ml datasets prepared
-
-# 1. Preprocess the data
-# Convert year and month to numeric
-train_forecast$year <- as.numeric(train_forecast$year)
-train_forecast$month <- as.numeric(train_forecast$month)
-
-# 2. Create a design matrix for the training set
-
-#assume lag_input is the input from users
-#assume lag_input is in terms of years
-
-# Number of lagged values
-lag <- (lag_input - 2024)*12  
-
-# Extract relevant features
-features <- c("year", "month", "town") 
-
-# Create lagged variables
-designmat_train <- lapply(1:lag, function(x) lag(train_forecast$log_resale_price, -x))
-designmat_train <- data.frame(matrix(unlist(designmat_train), nrow = nrow(train_forecast), byrow = TRUE))
-colnames(designmat_train) <- paste0("lag_", 1:lag)
-
-# Add other features to the design matrix
-designmat_train <- cbind(designmat_train, train_forecast[features])
-
-# Target variable
-y_train <- train_forecast$log_resale_price
-
-# 3. Train a random forest model
-rfModel <- randomForest(y_train ~ ., data = designmat_train)
-
-# 4. Predict iteratively for the test set
-forecast_steps <- 24  # Number of steps to forecast
-
-# Initialize design matrix for test set
-designmat_test <- designmat_train[nrow(designmat_train), -(1:lag)]
-
-for (i in 1:forecast_steps) {
-  # Create a vector for prediction
-  designvec <- designmat_test
-  # Update lagged values for the next prediction
-  lag_values <- lag(test_forecast$log_resale_price, -(lag - 1 + i))
-  designvec <- c(lag_values, designvec)
-  # Predict using the random forest model
-  prediction <- predict(rfModel, newdata = as.data.frame(t(designvec)))
-  # Append the prediction to the design matrix for the next iteration
-  designmat_test <- rbind(designmat_test, c(designvec, prediction))
+generate_month_dummies <- function() {
+  # Get the current year and month
+  current_date <- Sys.Date()
+  current_year <- as.integer(format(current_date, "%Y"))
+  current_month <- as.integer(format(current_date, "%m"))
+  
+  # Initialize a data frame to store the dummy variables
+  dummy_data <- data.frame(dummy_date = as.Date(character()), stringsAsFactors = FALSE)
+  year = c()
+  month = c()
+  
+  # Iterate over the next 12 months
+  for (i in 0:11) {
+    # Calculate the year and month for the current iteration
+    next_year <- year + current_year + floor((current_month + i - 1) / 12)
+    next_month <- month + ((current_month + i - 1) %% 12) + 1
+    
+    # Create a dummy variable for the current year and month
+    dummy_var <- as.Date(paste(next_year, sprintf("%02d", next_month), "01", sep = "-"))
+    
+    # Add the dummy variable to the data frame
+    col_name <- paste0("year_", next_year, "_month_", sprintf("%02d", next_month))
+    dummy_data[, col_name] <- ifelse(dummy_data$dummy_date == dummy_var, 1, 0)
+  }
+  
+  # Remove the dummy_date column
+  dummy_data$dummy_date <- NULL
+  
+  print(month)
 }
 
-# Extract predictions
-predictions <- designmat_test[(nrow(designmat_test) - forecast_steps + 1):nrow(designmat_test), "prediction"]
+# Example usage:
+month_dummies <- generate_month_dummies()
+print(month_dummies)
 
-# Plot predictions
-plot(test_forecast$log_resale_price, type = "l", main = "HDB Resale Price Forecast")
-lines(x = (1:forecast_steps), y = predictions, col = "red")
-legend("topright", legend = c("Actual", "Forecast"), col = c("black", "red"), lty = 1)
+
+```
+
+```{r}
+xgb_model_optimal = readRDS("xgb.rds")
+
 ```
