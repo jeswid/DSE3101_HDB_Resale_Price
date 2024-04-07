@@ -51,7 +51,8 @@ ui <- fluidPage(
                       # Sidebar content for geospatial analysis goes here (e.g., inputs, action buttons, etc.)
                       # It will only be visible when the Geospatial Analysis tab is active
                       div(id = "sidebar", class = "well",
-                          selectInput("addressM","Postal Code", choices = c(unique(all_address$postal))),
+                          selectInput("address", "Postal Code", choices = sort(unique(laty$postal), decreasing = TRUE)),
+                          
                           checkboxGroupInput("amenities", "Amenities", choices = c("MRT", "Primary Schools", "Hawker Centres", "Supermarkets")),
                           actionButton("submitmap", "Submit HDB 🔎", class = "btn-primary") ) ), ) ),
    
@@ -66,8 +67,10 @@ ui <- fluidPage(
           div(id = "sidebar", class = "well",
               sliderInput("floor_area_sqm", "Desired Square Meter",
                           min =  min_sqm, max = max_sqm,
-                          value = round((min_sqm + max_sqm) / 2), round = TRUE),              
-              selectInput("address","Postal Code", choices = c(unique(laty$postal))),
+                          value = round((min_sqm + max_sqm) / 2), round = TRUE),  
+              
+              selectInput("address", "Postal Code", choices = sort(unique(laty$postal), decreasing = TRUE)),
+              
               selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
                                                                    'New Generation', 'Maisonette', 'Apartment', 'Simplified',
                                                                    'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',

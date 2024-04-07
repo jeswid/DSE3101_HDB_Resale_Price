@@ -1,6 +1,9 @@
 # library('rgdal')
 # library('spdplyr')
+
+library('parsnip')
 library('leaflet')
+library("xgboost")
 library('htmltools')
 library('DT')
 library('plyr')
