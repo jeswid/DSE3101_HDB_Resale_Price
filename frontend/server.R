@@ -15,13 +15,24 @@ shinyServer(function(input, output, session) {
   
   data <- reactive({
     all_address %>%
-      filter(postal %in% input$addressM, 
-      ) %>%
+      filter(postal %in% input$addressM) %>%
       mutate(INFO = paste(sep = "<br/>",
                           town, "\n" , 
-                          "Nearest mrt:", `mrt_name`, "\n", 
-                          "Nearest primary school:", `primary_school_name`))
+                          "Nearest mrt:", mrt_name, "\n", 
+                          "Nearest primary school:", primary_school_name))
   })
+  
+  text_data <- reactive({
+    all_address %>%
+      filter(postal %in% input$addressM)
+  })
+
+  
+  output$geoSelectionOutput <- renderText({
+    as.character(text_data()$street)
+  })
+  
+
   
   icons <- awesomeIcons(
     icon = 'ios-close',
@@ -151,6 +162,58 @@ shinyServer(function(input, output, session) {
       output$priceOutput <- renderText({ "Please ensure a valid postal code is selected." })
     }
   })
+  
+  
+  # observeEvent(input$forecastprice, {
+  #   req(input$address)
+  #   filtered_row <- fittedprediction()  # Fetch the filtered dataset based on postal code
+  #   
+  #   if(nrow(filtered_row) > 0) {
+  #     # Prepare geospatial data and additional user inputs for prediction
+  #     geospatial_data <- filtered_row %>%
+  #       select(-c(postal, street))
+  #     current_date <- Sys.Date()
+  #     current_year <- as.numeric(format(current_date, "%Y"))
+  #     current_month <- as.numeric(format(current_date, "%m"))
+  #     current_month <- ifelse(current_month < 10, paste0("0", as.character(current_month)), as.character(current_month))
+  #     
+  #     final_row <- geospatial_data %>%
+  #       mutate(ave_storey = input$storey,
+  #              flat_model = input$flat_modelM,
+  #              flat_type = input$flat_type,
+  #              floor_area_sqm = input$floor_area_sqm,
+  #              year = current_year, 
+  #              month = current_month, 
+  #              remaining_lease = 99 - (current_year - lease_commence_date + as.numeric(current_month) / 12)) %>%
+  #       select(-lease_commence_date)
+  #     
+  #     # Data transformation and encoding for ML model input
+  #     sample_obs_before_encoding <- convert_to_categorical(final_row, get_categorical_columns(final_row))
+  #     sample_obs_transformed <- one_hot_encoding(sample_obs_before_encoding, get_categorical_columns(sample_obs_before_encoding))
+  #     newdata <- rbind.fill(sample_df, sample_obs_transformed)
+  #     newdata[is.na(newdata)] <- 0
+  #     newdata <- newdata[2,]
+  #     newdata <- as.matrix(newdata)
+  #     
+  #     # ML model prediction
+  #     prediction <- exp(predict(model, newdata))
+  #     
+  #     # Construct user selection message
+  #     selection_message <- paste("Your choice:", street_name(), ",", input$flat_type,
+  #                                input$flat_modelM, "FLAT AT LEVEL", input$storey, sep = "\n")
+  #     
+  #     # Combine selection message with prediction
+  #     final_message <- paste(selection_message, "Forecasted price:", prediction, sep = "\n\n")
+  #     
+  #     # Display the combined message
+  #     output$forecastOutput <- renderText({ final_message })
+  #     
+  #   } else {
+  #     # Handle case where no valid data is found for the postal code
+  #     output$forecastOutput <- renderText({ "Please ensure a valid postal code is selected." })
+  #   }
+  # })
+  
   
   
   
