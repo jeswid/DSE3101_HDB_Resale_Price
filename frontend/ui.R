@@ -43,7 +43,11 @@ ui <- fluidPage(
                fluidRow(
                  column(9,
                         verbatimTextOutput("geoSelectionOutput"),
-                        leafletOutput("map", width = "100%", height = "600px")
+                        leafletOutput("map", width = "100%", height = "600px"), 
+                        tableOutput("mrt_table"), 
+                        tableOutput("sch_table"), 
+                        tableOutput("supermarket_table"), 
+                        tableOutput("hawkers_table")
                  ),
                  
                  # Map output
@@ -52,7 +56,6 @@ ui <- fluidPage(
                         # It will only be visible when the Geospatial Analysis tab is active
                         div(id = "sidebar", class = "well",
                             selectInput("addressM","Postal Code", choices = c(unique(all_address$postal))),
-                            checkboxGroupInput("amenities", "Amenities", choices = c("MRT", "Primary Schools", "Hawker Centres", "Supermarkets")),
                             actionButton("submitmap", "Submit HDB 🔎", class = "btn-primary") ) ), ) ),
       
       
@@ -79,9 +82,9 @@ ui <- fluidPage(
                    actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary") )),
       textOutput("priceOutput"),
       
-  #### FORECASTED PRICE TAB 
+      #### FORECASTED PRICE TAB 
       tabPanel("Forecasted Price", value = "ForecastedPrice",
-    
+               
                fluidRow(
                  column(12,
                         # Content for Forecasted Price tab
@@ -103,16 +106,7 @@ ui <- fluidPage(
                    
                    actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary") )),
       verbatimTextOutput("priceOutput")
- 
-      ))
+      
+    ))
   
 )
-
-
-
-
-
-
-
-
-

@@ -15,24 +15,22 @@ shinyServer(function(input, output, session) {
   
   ############## MAP TAB ##################################################################
   
+  output$geoSelectionOutput <- renderText({
+    paste("You have selected:", "BLK", as.character(text_data()$street))
+  })
+  
   data <- reactive({
     all_address %>%
       filter(postal %in% input$addressM) %>%
-      mutate(INFO = paste(sep = "<br/>",
-                          town, "\n" , 
-                          "Nearest mrt:", `mrt_name`, "\n", 
-                          "Nearest primary school:", `primary_school_name`))
+      mutate(INFO = paste(street))
   })
   
   text_data <- reactive({
     all_address %>%
       filter(postal %in% input$addressM)
   })
-
-  output$geoSelectionOutput <- renderText({
-    paste("You have selected:", "BLK", as.character(text_data()$street))
-  })
   
+
   icons <- awesomeIcons(
     icon = 'ios-close',
     iconColor = 'black',
@@ -45,8 +43,52 @@ shinyServer(function(input, output, session) {
     leaflet(data = data()) %>%
       setView(lng = 103.8198, lat = 1.28, zoom = 10.5) %>%
       addTiles() %>%
-      addAwesomeMarkers(~lng, ~lat, icon = icons, popup = ~INFO, label = ~INFO)
+      addAwesomeMarkers(~lng, ~lat, icon = icons, popup = ~INFO, label = ~INFO) 
   })
+  
+  data_table_mrt <- reactive({
+    all_address %>%
+      filter(postal %in% input$addressM) %>%
+      select(`mrt_name`, `dist_to_nearest_mrt`, `mrt_1km`) %>%
+      rename("Nearest MRT Station" = `mrt_name`, 
+             "Distance to nearest mrt (in km)" = `dist_to_nearest_mrt`,
+             "MRT stations within 1km" = `mrt_1km`)
+  })
+  
+  output$mrt_table <- renderTable({data_table_mrt()})
+  
+  data_table_sch <- reactive({
+    all_address %>%
+      filter(postal %in% input$addressM) %>%
+      select(`primary_school_name`, `dist_to_nearest_primary_schools`, `primary_schools_1km`) %>%
+      rename("Nearest Primary School" = `primary_school_name`,
+             "Distance to nearest primary school (in km)" = `dist_to_nearest_primary_schools`, 
+             "Primary Schools within 1km" = `primary_schools_1km`)
+  })
+  
+  output$sch_table <- renderTable({data_table_sch()})
+  
+  data_table_supermarket <- reactive({
+    all_address %>%
+      filter(postal %in% input$addressM) %>%
+      select(`nearest_supermarket`, `dist_to_nearest_supermarket`, `supermarket_1km`) %>%
+      rename("Nearest Supermarket" = `nearest_supermarket`,
+             "Distance to nearest supermarket (in km)" = `dist_to_nearest_supermarket`, 
+             "Supermarkets within 1km" = `supermarket_1km`)
+  })
+  
+  output$supermarket_table <- renderTable({data_table_supermarket()})
+  
+  data_table_hawker <- reactive({
+    all_address %>%
+      filter(postal %in% input$addressM) %>%
+      select(`nearest_hawkers`, `dist_to_nearest_hawkers`, `hawkers_1km`) %>%
+      rename("Nearest Hawker Centre" = `nearest_hawkers`,
+             "Distance to nearest Hawker Centre (in km)" = `dist_to_nearest_hawkers`, 
+             "Hawker Centres within 1km" = `hawkers_1km`)
+  })
+  
+  output$hawkers_table <- renderTable({data_table_hawker()})
 
   ########################## HOME TAB ######################################################
   output$homeOutput <- renderUI({
