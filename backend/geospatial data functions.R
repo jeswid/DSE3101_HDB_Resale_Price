@@ -351,11 +351,6 @@ lat_long_postal_xy = lat_long_postal_xy %>%
 
 ##########################################################################################
 # Data Cleaning to get the proper MRT and Primary School names to assist visualisations
-primary_schools = read.csv("backend/raw_data/primary_schools.csv") %>% select(-1)
-primary_schools <- primary_schools %>% mutate(Address = str_replace(Address, ", S", "-")) %>%
-  separate(Address, c("address", "postal"), sep = "-") %>% 
-  transmute(primary_school_name = Primary.School, postal_primary = postal)
-
 get_onemap_mrt <- function(id) {
   base_url <- "https://www.onemap.gov.sg/api/common/elastic/search?searchVal="
   endpoint <- "&returnGeom=Y&getAddrDetails=Y"
@@ -410,11 +405,98 @@ get_onemap_mrt_address <- function(id) {
   }
 }
 
+get_onemap_hospital_address <- function(id) {
+  base_url <- "https://www.onemap.gov.sg/api/common/elastic/search?searchVal="
+  endpoint <- "&returnGeom=Y&getAddrDetails=Y"
+  resource_url <- paste0(base_url, as.character(id), endpoint)
+  
+  # Make the GET request with the access token in the header
+  res <- GET(resource_url,
+             add_headers(Authorization = paste("Bearer", Sys.getenv("ONEMAP_KEY"))),
+             accept("application/json"))
+  
+  # Check the status code
+  if (res$status_code == 200) {
+    # Parse the response content
+    res_list <- content(res, type = "text") %>%
+      fromJSON(flatten = TRUE)
+    
+    # Convert response to tibble
+    df <- as_tibble(res_list$results)
+    return(df$ADDRESS[1])
+  } else {
+    # cat("Error: Request for ID", id, "failed with status code", res$status_code, "\n")
+    return("WRONG")
+  }
+}
+
+get_onemap_supermarket_address <- function(id) {
+  base_url <- "https://www.onemap.gov.sg/api/common/elastic/search?searchVal="
+  endpoint <- "&returnGeom=Y&getAddrDetails=Y"
+  resource_url <- paste0(base_url, as.character(id), endpoint)
+  
+  # Make the GET request with the access token in the header
+  res <- GET(resource_url,
+             add_headers(Authorization = paste("Bearer", Sys.getenv("ONEMAP_KEY"))),
+             accept("application/json"))
+  
+  # Check the status code
+  if (res$status_code == 200) {
+    # Parse the response content
+    res_list <- content(res, type = "text") %>%
+      fromJSON(flatten = TRUE)
+    
+    # Convert response to tibble
+    df <- as_tibble(res_list$results)
+    return(df$ADDRESS)
+  } else {
+    # cat("Error: Request for ID", id, "failed with status code", res$status_code, "\n")
+    return("WRONG")
+  }
+}
+
+primary_schools = read.csv("backend/raw_data/primary_schools.csv") %>% select(-1)
+primary_schools <- primary_schools %>% mutate(Address = str_replace(Address, ", S", "-")) %>%
+  separate(Address, c("address", "postal"), sep = "-") %>% 
+  transmute(primary_school_name = Primary.School, postal_primary = postal)
+
 mrt = read_excel("backend/raw_data/Train Station Codes and Chinese Names.xls") %>%
   rowwise() %>% 
   mutate(mrt_name = get_onemap_mrt(stn_code), mrt_address = get_onemap_mrt_address(stn_code)) %>% 
   select(mrt_name, mrt_address)
 mrt = mrt %>% unique()
+
+hawkers = hawkers %>% unique() %>%
+  select(name_of_centre, postal)
+
+#replace na values with NA
+supermarkets = read.csv("backend/raw_data/ListofSupermarketLicences.csv")
+supermarkets = supermarkets %>% unique() %>%
+  mutate(street_name = ifelse(street_name == "na",NA, street_name)) %>%
+  drop_na(street_name) %>%
+  select(licensee_name, postal_code)
+
+#check for na values in postal_code
+is.na(supermarkets$postal_code)
+
+#find the supermarket addresses
+supermarkets_address = supermarkets %>%
+  rowwise() %>% 
+  mutate(supermarket_address = list(get_onemap_supermarket_address(postal_code))) 
+
+supermarkets = supermarkets_address %>% 
+  select(licensee_name, supermarket_address) %>%
+  mutate(supermarket_address = ifelse(!is.null(supermarket_address), as.character(supermarket_address), NA)) %>%
+  drop_na() %>% unique()
+
+hospitals = hospitals %>% unique() %>% mutate(postal = as.character(postal)) 
+
+#look for address
+hospitals_add_postal = hospitals%>%
+  rowwise() %>% 
+  mutate(hospital_address = get_onemap_hospital_address(postal)) %>% 
+  select(Name, hospital_address, postal) %>%
+  unique()
 
 hdb_blocks = readRDS("backend/processed_data/lat_long_for_visualisation.Rds")
 hdb_blocks = hdb_blocks %>% 
@@ -425,8 +507,30 @@ hdb_blocks = hdb_blocks %>%
                                           nchar(nearest_mrt) - 5, 
                                           nchar(nearest_mrt))) %>%
   left_join(primary_schools, by = c("postal_code_nearest_primary" = "postal_primary")) %>%
-  left_join(mrt, by = c("nearest_mrt" = "mrt_address")) 
+  left_join(mrt, by = c("nearest_mrt" = "mrt_address"))
 
+#read the hdb_blocks w mrt and pri sch names data
+hdb_blocks_new = read.csv("backend/processed_data/unique_hdb_block_details_w_schools_mrt_name.csv")
+
+hdb_blocks_w_schools_mrt_hawkers_name = hdb_blocks_new %>%
+  mutate(postal_code_nearest_hospital = substr(nearest_hospital,
+                                          nchar(nearest_hospital) - 5, 
+                                          nchar(nearest_hospital))) %>%
+  mutate(postal_code_nearest_supermarket = substr(nearest_supermarket,
+                                               nchar(nearest_supermarket) - 5, 
+                                               nchar(nearest_supermarket))) %>%
+  mutate(postal_code_nearest_hawkers = substr(nearest_hawkers,
+                                                  nchar(nearest_hawkers) - 5, 
+                                                  nchar(nearest_hawkers))) %>%
+  left_join(hawkers, by = c("postal_code_nearest_hawkers" = "postal"))
+
+
+#saveRDS(hdb_blocks_w_schools_mrt_hawkers_name, "hdb_blocks_w_schools_mrt_hawkers_name.Rds")
+#write.csv(hdb_blocks_w_schools_mrt_hawkers_name, "hdb_blocks_w_schools_mrt_hawkers_name.csv")
+  
+  
+
+#for hospitals and supermarkets, we need to join via street address
 # Mutated the town column
 hdb_blocks = hdb_blocks %>% 
   left_join(hdb_town, by = c("street" = "address")) %>%
