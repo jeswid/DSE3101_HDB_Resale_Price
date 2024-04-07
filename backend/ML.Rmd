@@ -367,41 +367,32 @@ xgb.fit = readRDS("xgb.rds")
 
 ### h step ahead forecast using XGBoost
 ```{r}
-generate_month_dummies <- function() {
+generate_month_dummies <- function(h = 12) {
   # Get the current year and month
   current_date <- Sys.Date()
   current_year <- as.integer(format(current_date, "%Y"))
   current_month <- as.integer(format(current_date, "%m"))
   
   # Initialize a data frame to store the dummy variables
-  dummy_data <- data.frame(dummy_date = as.Date(character()), stringsAsFactors = FALSE)
+  time <- data.frame(year = numeric(), month = character())
   year = c()
   month = c()
   
   # Iterate over the next 12 months
-  for (i in 0:11) {
+  for (i in 0:h) {
     # Calculate the year and month for the current iteration
-    next_year <- year + current_year + floor((current_month + i - 1) / 12)
-    next_month <- month + ((current_month + i - 1) %% 12) + 1
-    
-    # Create a dummy variable for the current year and month
-    dummy_var <- as.Date(paste(next_year, sprintf("%02d", next_month), "01", sep = "-"))
-    
-    # Add the dummy variable to the data frame
-    col_name <- paste0("year_", next_year, "_month_", sprintf("%02d", next_month))
-    dummy_data[, col_name] <- ifelse(dummy_data$dummy_date == dummy_var, 1, 0)
+    next_year <- current_year + floor((current_month + i - 1) / 12)
+    next_month <- ((current_month + i - 1) %% 12) + 1
+    time = rbind(time, c(next_year,next_month))
   }
-  
-  # Remove the dummy_date column
-  dummy_data$dummy_date <- NULL
-  
-  print(month)
+  names(time)[1] = "year"
+  names(time)[2] = "month"
+  return (time)
 }
 
 # Example usage:
 month_dummies <- generate_month_dummies()
 print(month_dummies)
-
 ```
 
 ```{r}
