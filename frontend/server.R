@@ -22,14 +22,14 @@ shinyServer(function(input, output, session) {
                           "Nearest primary school:", `primary_school_name`))
   })
   
-  # text_data <- reactive({
-  #   all_address %>%
-  #     filter(postal %in% input$addressM)
-  # })
-  # 
-  # output$geoSelectionOutput <- renderText({
-  #   as.character(text_data()$street)
-  # })
+  text_data <- reactive({
+    all_address %>%
+      filter(postal %in% input$addressM)
+  })
+
+  output$geoSelectionOutput <- renderText({
+    paste("You have selected:", "BLK", as.character(text_data()$street))
+  })
   
   icons <- awesomeIcons(
     icon = 'ios-close',
