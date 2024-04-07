@@ -52,6 +52,7 @@ ui <- fluidPage(
                       # It will only be visible when the Geospatial Analysis tab is active
                       div(id = "sidebar", class = "well",
                           selectInput("addressM","Postal Code", choices = c(unique(all_address$postal))),
+                          checkboxGroupInput("amenities", "Amenities", choices = c("MRT", "Primary Schools", "Hawker Centres", "Supermarkets")),
                           actionButton("submitmap", "Submit HDB 🔎", class = "btn-primary") ) ), ) ),
    
      
