@@ -77,8 +77,9 @@ ui <- fluidPage(
                    sliderInput("storey","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
                    
                    actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary") )),
-      verbatimTextOutput("priceOutput"),
+      textOutput("priceOutput"),
       
+  
       tabPanel("Forecasted Price", value = "ForecastedPrice",
     
                fluidRow(

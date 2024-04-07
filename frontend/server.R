@@ -141,16 +141,24 @@ shinyServer(function(input, output, session) {
                                  input$flat_modelM, "FLAT AT LEVEL", input$storey, sep = "\n")
       
       # Combine selection message with prediction
-      final_message <- paste(selection_message, "Predicted price:", prediction, sep = "\n\n")
+      output$priceOutput <- renderText({ selection_message })
       
-      # Display the combined message
-      output$priceOutput <- renderText({ final_message })
-      
-    } else {
-      # Handle case where no valid data is found for the postal code
-      output$priceOutput <- renderText({ "Please ensure a valid postal code is selected." })
-    }
-  })
+      # Show the predicted price in a modal dialog
+      if(nrow(filtered_row) > 0) {
+        showModal(modalDialog(
+          title = "Predicted Price",
+          h3(formatC(prediction, format = "f", big.mark = ",", digits = 2)),
+          footer = modalButton("Close")
+        ))
+      } else {
+        # You can also use a modal to show an error message if you prefer
+        showModal(modalDialog(
+          title = "Error",
+          "Please ensure a valid postal code is selected.",
+          footer = modalButton("Close")
+        ))
+      }
+  }
   
   
   # observeEvent(input$forecastprice, {
@@ -204,8 +212,5 @@ shinyServer(function(input, output, session) {
   # })
   
   
-  
-  
-  
-  
+})
 })
