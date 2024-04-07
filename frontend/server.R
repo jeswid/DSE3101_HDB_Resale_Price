@@ -179,7 +179,7 @@ shinyServer(function(input, output, session) {
       if(nrow(filtered_row) > 0) {
         showModal(modalDialog(
           title = "Predicted Price",
-          h3(paste("$", formatC(prediction, format = "f", big.mark = ",", digits = 2), sep="")),
+          h3(paste("$", formatC(prediction, format = "f", big.mark = ",", digits = 0), sep="")),
           footer = modalButton("Close")
         ))
       } else {
