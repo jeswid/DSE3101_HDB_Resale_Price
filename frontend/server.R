@@ -38,6 +38,8 @@ shinyServer(function(input, output, session) {
     markerColor = "red"
   )
   
+  
+############## MAP TAB ##################################################################
   output$map <- renderLeaflet({
     leaflet(data = data()) %>%
       setView(lng = 103.8198, lat = 1.28, zoom = 10.5) %>%
@@ -45,35 +47,8 @@ shinyServer(function(input, output, session) {
       addAwesomeMarkers(~lng, ~lat, icon = icons, popup = ~INFO, label = ~INFO) %>%
       addProviderTiles(providers$Esri.WorldStreetMap)
   })
-  
 
-  observeEvent(input$submitprice, {
-    output$priceOutput <- renderText({
-      if(!is.null(input$address) && street_name() != "Street name not found") {
-        paste("Your choice:",
-              street_name(), ",", input$flat_type,
-              input$flat_modelM, "FLAT AT LEVEL", input$storey, sep = "\n")
-      } else {
-        "Please ensure a valid postal code is selected."
-      }
-    })
-  })
-
-  street_name <- reactive({
-    matched_row <- laty[laty$postal == input$address, ]
-    
-    if(nrow(matched_row) > 0) {
-      return(matched_row$street)
-    } else {
-      return("Street name not found")
-    }
-  })
-  
-
-  
-
-  
-  
+  ########################## HOME TAB ######################################################
   output$homeOutput <- renderUI({
     HTML(paste0('
     <div style="font-size: 15px; line-height: 1.6;">
@@ -91,6 +66,18 @@ shinyServer(function(input, output, session) {
     </div>'
     ))
   })
+  
+
+  ######################## FUNCTIONS NEEDED ########################################################
+  street_name <- reactive({
+    matched_row <- laty[laty$postal == input$address, ]
+    
+    if(nrow(matched_row) > 0) {
+      return(matched_row$street)
+    } else {
+      return("Street name not found")
+    }
+  })
   fittedprediction <- reactive({
     completerow <- laty %>%
       filter(postal == input$address)
@@ -101,7 +88,10 @@ shinyServer(function(input, output, session) {
       return(data.frame(Street = "Street name not found"))
     }
   })
+ 
+ 
   
+###################PREDICTED PRICE TAB #############################################################  
   observeEvent(input$submitprice, {
     req(input$address)
     filtered_row <- fittedprediction()  # Fetch the filtered dataset based on postal code
@@ -147,7 +137,7 @@ shinyServer(function(input, output, session) {
       if(nrow(filtered_row) > 0) {
         showModal(modalDialog(
           title = "Predicted Price",
-          h3(formatC(prediction, format = "f", big.mark = ",", digits = 2)),
+          h3(paste("$", formatC(prediction, format = "f", big.mark = ",", digits = 2), sep="")),
           footer = modalButton("Close")
         ))
       } else {
@@ -157,60 +147,33 @@ shinyServer(function(input, output, session) {
           "Please ensure a valid postal code is selected.",
           footer = modalButton("Close")
         ))
-      }
-  }
-  
-  
-  # observeEvent(input$forecastprice, {
-  #   req(input$address)
-  #   filtered_row <- fittedprediction()  # Fetch the filtered dataset based on postal code
-  #   
-  #   if(nrow(filtered_row) > 0) {
-  #     # Prepare geospatial data and additional user inputs for prediction
-  #     geospatial_data <- filtered_row %>%
-  #       select(-c(postal, street))
-  #     current_date <- Sys.Date()
-  #     current_year <- as.numeric(format(current_date, "%Y"))
-  #     current_month <- as.numeric(format(current_date, "%m"))
-  #     current_month <- ifelse(current_month < 10, paste0("0", as.character(current_month)), as.character(current_month))
-  #     
-  #     final_row <- geospatial_data %>%
-  #       mutate(ave_storey = input$storey,
-  #              flat_model = input$flat_modelM,
-  #              flat_type = input$flat_type,
-  #              floor_area_sqm = input$floor_area_sqm,
-  #              year = current_year, 
-  #              month = current_month, 
-  #              remaining_lease = 99 - (current_year - lease_commence_date + as.numeric(current_month) / 12)) %>%
-  #       select(-lease_commence_date)
-  #     
-  #     # Data transformation and encoding for ML model input
-  #     sample_obs_before_encoding <- convert_to_categorical(final_row, get_categorical_columns(final_row))
-  #     sample_obs_transformed <- one_hot_encoding(sample_obs_before_encoding, get_categorical_columns(sample_obs_before_encoding))
-  #     newdata <- rbind.fill(sample_df, sample_obs_transformed)
-  #     newdata[is.na(newdata)] <- 0
-  #     newdata <- newdata[2,]
-  #     newdata <- as.matrix(newdata)
-  #     
-  #     # ML model prediction
-  #     prediction <- exp(predict(model, newdata))
-  #     
-  #     # Construct user selection message
-  #     selection_message <- paste("Your choice:", street_name(), ",", input$flat_type,
-  #                                input$flat_modelM, "FLAT AT LEVEL", input$storey, sep = "\n")
-  #     
-  #     # Combine selection message with prediction
-  #     final_message <- paste(selection_message, "Forecasted price:", prediction, sep = "\n\n")
-  #     
-  #     # Display the combined message
-  #     output$forecastOutput <- renderText({ final_message })
-  #     
-  #   } else {
-  #     # Handle case where no valid data is found for the postal code
-  #     output$forecastOutput <- renderText({ "Please ensure a valid postal code is selected." })
-  #   }
-  # })
-  
-  
-})
-})
+      } }
+    
+    
+  ##### FORECASTED PRICE TAB ###################################################################################
+    # Reactive expression for forecast data
+    
+    forecastData <- reactive({
+      # Create a function to generate forecast data based on our model.
+      # Return a data frame with at least two columns: 'date' and 'price'
+      # Assume the function is named 'generateForecast' and it accepts year and month as arguments.
+      generateForecast(input$forecastYear, input$forecastMonth)
+    })
+    
+    # Render the forecast line chart
+    output$forecastChart <- renderPlot({
+      req(input$submitforecast)  # Require that the forecast button has been clicked
+      data <- forecastData()     # Fetch the forecast data
+      
+      # Generate the line chart
+      ggplot(data, aes(x = date, y = price)) +
+        geom_line() +
+        labs(title = "Forecasted HDB Prices", x = "Date", y = "Price") +
+        theme_minimal()
+    })
+
+  })
+})  
+    
+    
+ 

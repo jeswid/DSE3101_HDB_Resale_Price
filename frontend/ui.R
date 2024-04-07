@@ -79,7 +79,7 @@ ui <- fluidPage(
                    actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary") )),
       textOutput("priceOutput"),
       
-  
+  #### FORECASTED PRICE TAB 
       tabPanel("Forecasted Price", value = "ForecastedPrice",
     
                fluidRow(
@@ -89,7 +89,9 @@ ui <- fluidPage(
                div(id = "sidebar", class = "well",
                    sliderInput("floor_area_sqm", "Desired Square Meter",
                                min =  min_sqm, max = max_sqm,
-                               value = round((min_sqm + max_sqm) / 2), round = TRUE),              
+                               value = round((min_sqm + max_sqm) / 2), round = TRUE), 
+                   numericInput("forecastYear", "Select Year", value = format(Sys.Date(), "%Y")),
+                   selectInput("forecastMonth", "Select Month", choices = month.name, selected = format(Sys.Date(), "%B")),
                    selectInput("address","Postal Code", choices = c(unique(laty$postal))),
                    selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
                                                                         'New Generation', 'Maisonette', 'Apartment', 'Simplified',
