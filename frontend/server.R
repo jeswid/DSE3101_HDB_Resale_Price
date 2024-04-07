@@ -13,6 +13,8 @@ library('RColorBrewer')
 shinyServer(function(input, output, session) {
   shinyjs::addClass(selector = "body", class = "sidebar-collapse")
   
+  ############## MAP TAB ##################################################################
+  
   data <- reactive({
     all_address %>%
       filter(postal %in% input$addressM) %>%
@@ -39,13 +41,11 @@ shinyServer(function(input, output, session) {
   )
   
   
-############## MAP TAB ##################################################################
   output$map <- renderLeaflet({
     leaflet(data = data()) %>%
       setView(lng = 103.8198, lat = 1.28, zoom = 10.5) %>%
       addTiles() %>%
-      addAwesomeMarkers(~lng, ~lat, icon = icons, popup = ~INFO, label = ~INFO) %>%
-      addProviderTiles(providers$Esri.WorldStreetMap)
+      addAwesomeMarkers(~lng, ~lat, icon = icons, popup = ~INFO, label = ~INFO)
   })
 
   ########################## HOME TAB ######################################################
