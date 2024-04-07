@@ -13,6 +13,7 @@ library(rpart)
 library(VIM)
 library(gbm)
 library(hdm)
+library(xgboost)
 ```
 
 ### Conduct stratified sampling and loading the train and test sets
@@ -110,7 +111,7 @@ for(i in 1:nset) {
   predictions_rf <- predict(rffit, test_ml, method = "anova") 
   # Calculate RMSE 
   rmse_rt <- sqrt(mean((test_ml_y - predictions_rf)^2)) 
-  print(paste("RMSE for Random Forest","(trees:", ntreev[i],"):", rmse_rt))
+  print(paste("RMSE for Random Forest",c, rmse_rt))
 }
 
 # RMSE for Random Forest (trees: 500): 0.0641815677018226
@@ -123,7 +124,7 @@ for(i in 1:nset) {
 ### Model with tuned parameters
 ```{r}
 set.seed(42)
-rffit = randomForest(log_price~.,data=train_ml,ntree=500, mtry= floor(136/3)) 
+rffit = randomForest(log_price~.,data=train_ml,ntree=1000, mtry= floor(136/3)) 
 
 plot(rffit) #plot the OOB error 
 
@@ -141,14 +142,14 @@ print(paste("RMSE for Random Forest:", rmse_rf))
 
 # rffit = readRDS("RandomForest.rds")
 
-# RMSE for Random Forest: 0.0641815677018226
+# RMSE for Random Forest: 0.0631247324693827
 ```
 
 ### Bagging
 ```{r}
 set.seed(42)
 #we use the same n_tree for both rf and bagging
-bagfit = randomForest(log_price~.,data=train_ml, ntree=500, mtry=136)
+bagfit = randomForest(log_price~.,data=train_ml, ntree=1000, mtry=136)
 
 plot(bagfit) #plot the OOB error 
 
@@ -162,10 +163,11 @@ rmse_bag <- sqrt(mean((test_ml_y - predictions_bag)^2))
 print(paste("RMSE for Bagging:", rmse_bag))
 
 # Saving the model
-# saveRDS(bagfit, file = "Bagging.rds")
+saveRDS(bagfit, file = "Bagging.rds")
 
 # bagfit = readRDS("Bagging.rds")
-# RMSE for Bagging: 0.0670008408203258
+# RMSE for Bagging w 500 trees: 0.0670008408203258
+# RMSE for Bagging w 1000 trees: 0.0670001339301782
 ```
 
 # Traditional Gradient Boosting Machine (GBM)
@@ -263,7 +265,7 @@ plasso = rlasso(log_price~., data=train_ml,penalty=list(X.dependent.lambda=FALSE
 # Make predictions on the test data
 predictions_plasso <- predict(plasso, newdata = test_ml)
  
-# Calculate RMSE
+# Calculate RMSEA
 rmse_plasso <- sqrt(mean((test_ml_y - predictions_plasso)^2))
  
 # Print RMSE
@@ -302,8 +304,38 @@ rmse_xg <- sqrt(mean((test_ml_y - predictions_xg)^2))
 
 # Print RMSE 
 print(paste("RMSE for XG Boost:", rmse_xg))
-# RMSE for XG Boost: 0.057909164860733
 
+# RMSE for XG Boost (500 trees): 0.057909164860733
+```
+
+### Tuning XGB
+```{r}
+set.seed(42)
+
+nroundv = c(500, 1000)
+
+nset = length(nroundv) #number of cases for tree numbers - will determine number of iterations in the loop
+
+for(i in 1:nset) {
+  xgbfit = xgboost(
+  data = X_train,
+  label = Y_train,
+  nrounds = nroundv[i],
+  objective = "reg:squarederror"
+)
+  predictions_xg <- predict(xgb.fit, X_test)
+  # Calculate RMSE 
+  rmse_xg <- sqrt(mean((test_ml_y - predictions_xg)^2))  
+  print(paste("RMSE for XG Boost:", "(rounds:", nroundv[i],"):", rmse_xg))
+}
+
+# RMSE for XG Boost (500 trees): 0.057909164860733
+# RMSE for XG Boost (1000 trees): 0.0584962633816906
+```
+
+
+# OLS with XGBoost feature selection
+```{r}
 # variable importance plot
 # Compute feature importance matrix
 importance_matrix = xgb.importance(model = xgb.fit)
@@ -329,37 +361,47 @@ summary(xg_ols)
 # Saving the model
 # saveRDS(xgb.fit, file = "xgb.rds")
 
-# xgb.fit = readRDS("xgb.rds")
+xgb.fit = readRDS("xgb.rds")
 ```
+
 
 ### h step ahead forecast using XGBoost
 ```{r}
-generate_month_dummies <- function(h = 12) {
+generate_month_dummies <- function() {
   # Get the current year and month
   current_date <- Sys.Date()
   current_year <- as.integer(format(current_date, "%Y"))
   current_month <- as.integer(format(current_date, "%m"))
   
   # Initialize a data frame to store the dummy variables
-  time <- data.frame(year = numeric(), month = character())
+  dummy_data <- data.frame(dummy_date = as.Date(character()), stringsAsFactors = FALSE)
   year = c()
   month = c()
   
   # Iterate over the next 12 months
-  for (i in 0:h) {
+  for (i in 0:11) {
     # Calculate the year and month for the current iteration
-    next_year <- current_year + floor((current_month + i - 1) / 12)
-    next_month <- ((current_month + i - 1) %% 12) + 1
-    time = rbind(time, c(next_year,next_month))
+    next_year <- year + current_year + floor((current_month + i - 1) / 12)
+    next_month <- month + ((current_month + i - 1) %% 12) + 1
+    
+    # Create a dummy variable for the current year and month
+    dummy_var <- as.Date(paste(next_year, sprintf("%02d", next_month), "01", sep = "-"))
+    
+    # Add the dummy variable to the data frame
+    col_name <- paste0("year_", next_year, "_month_", sprintf("%02d", next_month))
+    dummy_data[, col_name] <- ifelse(dummy_data$dummy_date == dummy_var, 1, 0)
   }
-  names(time)[1] = "year"
-  names(time)[2] = "month"
-  return (time)
+  
+  # Remove the dummy_date column
+  dummy_data$dummy_date <- NULL
+  
+  print(month)
 }
 
 # Example usage:
 month_dummies <- generate_month_dummies()
 print(month_dummies)
+
 ```
 
 ```{r}
