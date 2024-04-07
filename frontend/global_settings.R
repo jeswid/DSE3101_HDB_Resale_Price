@@ -3,6 +3,7 @@
 library('leaflet')
 library('htmltools')
 library('DT')
+library('plyr')
 library('dplyr')
 library('tidyr')
 library('ggplot2')
