@@ -34,84 +34,78 @@ ui <- fluidPage(
       }
       /* Additional styles can be added here */
     ")),
-  navbarPage(
-    id = "tabs",  # Important: set an ID for the navbarPage
-    title = "Visualizing and Predicting Singapore HDB Resale Prices",
-    tabPanel("Home", value = "Home",
-             uiOutput("homeOutput") ),
-    tabPanel("Geospatial Analysis", value = "GeospatialAnalysis",
-             fluidRow(
-               column(9,
-                      textOutput("geoSelectionOutput"),
-                      leafletOutput("map", width = "100%", height = "600px"),
-               ),
-
- # Map output
-               column(3,
-                      # Sidebar content for geospatial analysis goes here (e.g., inputs, action buttons, etc.)
-                      # It will only be visible when the Geospatial Analysis tab is active
-                      div(id = "sidebar", class = "well",
-                          selectInput("addressM","Postal Code", choices = c(unique(all_address$postal))),
-                          checkboxGroupInput("amenities", "Amenities", choices = c("MRT", "Primary Schools", "Hawker Centres", "Supermarkets")),
-                          actionButton("submitmap", "Submit HDB 🔎", class = "btn-primary") ) ), ) ),
-   
-     
- # tabPanel("Forecasted Price", value = "ForecastedPrice",
- #          
- #          
- #          fluidRow(
- #            column(12,
- #                   # Content for Predicted Price tab
- #                   textOutput("priceOutput") )),
- #          div(id = "sidebar", class = "well",
- #              sliderInput("floor_area_sqm", "Desired Square Meter",
- #                          min =  min_sqm, max = max_sqm,
- #                          value = round((min_sqm + max_sqm) / 2), round = TRUE),  
- #              
- #              selectInput("address", "Postal Code", choices = sort(unique(laty$postal), decreasing = TRUE)),
- #              
- #              selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
- #                                                                   'New Generation', 'Maisonette', 'Apartment', 'Simplified',
- #                                                                   'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
- #                                                                   '2-room', 'Executive Maisonette', 'Type S1S2'), 
- #                          selected = "Model A"),
- #              selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
- #              sliderInput("storey","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
- #              
- #              actionButton("submitforecast", "Submit HDB 🔎", class = "btn-primary") )),
- # verbatimTextOutput("forecastOutput") )),
- # 
-
-tabPanel("Predicted Price", value = "PredictedPrice",
-         
-         
-         fluidRow(
-           column(12,
-                  # Content for Predicted Price tab
-                  textOutput("priceOutput") )),
-         div(id = "sidebar", class = "well",
-             sliderInput("floor_area_sqm", "Desired Square Meter",
-                         min =  min_sqm, max = max_sqm,
-                         value = round((min_sqm + max_sqm) / 2), round = TRUE),  
-             
-             selectInput("address", "Postal Code", choices = sort(unique(laty$postal), decreasing = TRUE)),
-             
-             selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
-                                                                  'New Generation', 'Maisonette', 'Apartment', 'Simplified',
-                                                                  'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
-                                                                  '2-room', 'Executive Maisonette', 'Type S1S2'), 
-                         selected = "Model A"),
-             selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
-             sliderInput("storey","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
-             
-             actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary") )),
-verbatimTextOutput("priceOutput")
-
-
-
-))
-
+    navbarPage(
+      id = "tabs",  # Important: set an ID for the navbarPage
+      title = "Visualizing and Predicting Singapore HDB Resale Prices",
+      tabPanel("Home", value = "Home",
+               uiOutput("homeOutput") ),
+      tabPanel("Geospatial Analysis", value = "GeospatialAnalysis",
+               fluidRow(
+                 column(9,
+                        verbatimTextOutput("geoSelectionOutput"),
+                        leafletOutput("map", width = "100%", height = "600px")
+                 ),
+                 
+                 # Map output
+                 column(3,
+                        # Sidebar content for geospatial analysis goes here (e.g., inputs, action buttons, etc.)
+                        # It will only be visible when the Geospatial Analysis tab is active
+                        div(id = "sidebar", class = "well",
+                            selectInput("addressM","Postal Code", choices = c(unique(all_address$postal))),
+                            checkboxGroupInput("amenities", "Amenities", choices = c("MRT", "Primary Schools", "Hawker Centres", "Supermarkets")),
+                            actionButton("submitmap", "Submit HDB 🔎", class = "btn-primary") ) ), ) ),
+      
+      
+      tabPanel("Predicted Price", value = "PredictedPrice",
+               
+               
+               fluidRow(
+                 column(12,
+                        # Content for Predicted Price tab
+                        textOutput("priceOutput") )),
+               div(id = "sidebar", class = "well",
+                   sliderInput("floor_area_sqm", "Desired Square Meter",
+                               min =  min_sqm, max = max_sqm,
+                               value = round((min_sqm + max_sqm) / 2), round = TRUE),              
+                   selectInput("address","Postal Code", choices = c(unique(laty$postal))),
+                   selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
+                                                                        'New Generation', 'Maisonette', 'Apartment', 'Simplified',
+                                                                        'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
+                                                                        '2-room', 'Executive Maisonette', 'Type S1S2'), 
+                               selected = "Model A"),
+                   selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
+                   sliderInput("storey","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
+                   
+                   actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary") )),
+      verbatimTextOutput("priceOutput"),
+      
+      tabPanel("Forecasted Price", value = "ForecastedPrice",
+    
+               fluidRow(
+                 column(12,
+                        # Content for Forecasted Price tab
+                        textOutput("forecastpriceOutput") )),
+               div(id = "sidebar", class = "well",
+                   sliderInput("floor_area_sqm", "Desired Square Meter",
+                               min =  min_sqm, max = max_sqm,
+                               value = round((min_sqm + max_sqm) / 2), round = TRUE),              
+                   selectInput("address","Postal Code", choices = c(unique(laty$postal))),
+                   selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
+                                                                        'New Generation', 'Maisonette', 'Apartment', 'Simplified',
+                                                                        'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
+                                                                        '2-room', 'Executive Maisonette', 'Type S1S2'), 
+                               selected = "Model A"),
+                   selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
+                   sliderInput("storey","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
+                   
+                   actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary") )),
+      verbatimTextOutput("priceOutput")
+ 
+      ))
+  
 )
+
+
 
 
 
