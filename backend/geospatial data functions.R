@@ -434,7 +434,6 @@ hdb_blocks = hdb_blocks %>%
 # write.csv(hdb_blocks, "backend/processed_data/unique_hdb_block_details_w_schools_mrt_name.csv") 
 # Note: csv is for frontend usage
 # saveRDS(hdb_blocks, "backend/processed_data/unique_hdb_block_details_w_schools_mrt_name.Rds")
-hdb_blocks = readRDS("backend/processed_data/unique_hdb_block_details_w_schools_mrt_name.Rds")
 
 ##########################################################################################
 # Test Example of ONEMAP API Call
