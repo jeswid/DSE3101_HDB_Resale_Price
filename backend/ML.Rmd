@@ -118,7 +118,7 @@ for(i in 1:nset) {
 
 # RMSE for Random Forest (trees: 1000 ): 0.0631247324693827
 
-# We pick ntree = 500 due to both faster runtime and lower RMSE.
+# We pick ntree = 1000 due to lower RMSE.
 ```
 
 ### Model with tuned parameters
