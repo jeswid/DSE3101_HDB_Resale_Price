@@ -18,21 +18,18 @@ shinyServer(function(input, output, session) {
       filter(postal %in% input$addressM) %>%
       mutate(INFO = paste(sep = "<br/>",
                           town, "\n" , 
-                          "Nearest mrt:", mrt_name, "\n", 
-                          "Nearest primary school:", primary_school_name))
+                          "Nearest mrt:", `mrt_name`, "\n", 
+                          "Nearest primary school:", `primary_school_name`))
   })
   
-  text_data <- reactive({
-    all_address %>%
-      filter(postal %in% input$addressM)
-  })
-
-  
-  output$geoSelectionOutput <- renderText({
-    as.character(text_data()$street)
-  })
-  
-
+  # text_data <- reactive({
+  #   all_address %>%
+  #     filter(postal %in% input$addressM)
+  # })
+  # 
+  # output$geoSelectionOutput <- renderText({
+  #   as.character(text_data()$street)
+  # })
   
   icons <- awesomeIcons(
     icon = 'ios-close',
@@ -74,15 +71,7 @@ shinyServer(function(input, output, session) {
   
 
   
-#MAPS OUTPUT
-  output$geoSelectionOutput <- renderText({
-    # Changed logic to handle "Street name not found"
-    if(!is.null(input$addressM) && street_name() != "Street name not found") {
-      paste("You have selected:", street_name(), sep = "\n")
-    } else {
-      "Please select a valid postal code."
-    }
-  })
+
   
   
   output$homeOutput <- renderUI({

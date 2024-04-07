@@ -51,8 +51,7 @@ ui <- fluidPage(
                       # Sidebar content for geospatial analysis goes here (e.g., inputs, action buttons, etc.)
                       # It will only be visible when the Geospatial Analysis tab is active
                       div(id = "sidebar", class = "well",
-                          selectInput("address", "Postal Code", choices = sort(unique(laty$postal), decreasing = TRUE)),
-                          
+                          selectInput("addressM","Postal Code", choices = c(unique(all_address$postal))),
                           checkboxGroupInput("amenities", "Amenities", choices = c("MRT", "Primary Schools", "Hawker Centres", "Supermarkets")),
                           actionButton("submitmap", "Submit HDB 🔎", class = "btn-primary") ) ), ) ),
    
