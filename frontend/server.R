@@ -38,13 +38,7 @@ shinyServer(function(input, output, session) {
       addProviderTiles(providers$Esri.WorldStreetMap)
   })
   
-  # observeEvent(input$submitprice, {
-  #   output$priceOutput <- renderText({
-  #     paste("Your choice:", 
-  #           street_name(),",",input$flat_type, 
-  #           input$flat_modelM,"FLAT AT LEVEL", input$storey, sep = "\n")
-  #   })})
-    
+
   observeEvent(input$submitprice, {
     output$priceOutput <- renderText({
       if(!is.null(input$address) && street_name() != "Street name not found") {
@@ -67,21 +61,9 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  # function used to filter out the row for the user input
-  fittedprediction <- reactive({
-    completerow <- laty %>% 
-      filter(laty$postal == input$address)
-    
-    if(nrow(completerow) > 0) {
-      return(completerow)
-    } else {
-      return(data.frame(Street = "Street name not found"))
-    }
-    
-  })
-  
-  
 
+  
+#MAPS OUTPUT
   output$geoSelectionOutput <- renderText({
     # Changed logic to handle "Street name not found"
     if(!is.null(input$addressM) && street_name() != "Street name not found") {
@@ -122,53 +104,54 @@ shinyServer(function(input, output, session) {
   
   observeEvent(input$submitprice, {
     req(input$address)
-    filtered_row <- fittedprediction() # Make sure this is defined as before
+    filtered_row <- fittedprediction()  # Fetch the filtered dataset based on postal code
     
     if(nrow(filtered_row) > 0) {
-      geospatial_data = filtered_row %>% # 14 variables
-        select(-c(postal,street))
+      # Prepare geospatial data and additional user inputs for prediction
+      geospatial_data <- filtered_row %>%
+        select(-c(postal, street))
       current_date <- Sys.Date()
       current_year <- as.numeric(format(current_date, "%Y"))
       current_month <- as.numeric(format(current_date, "%m"))
-      if (current_month < 10) {
-        current_month = paste0("0",as.character(current_month))
-      }
-      else{
-        current_month = as.character(current_month)
-      }
-      final_row <- geospatial_data %>% # include the 6 user inputs (Convert lease commence to remaining lease)
+      current_month <- ifelse(current_month < 10, paste0("0", as.character(current_month)), as.character(current_month))
+      
+      final_row <- geospatial_data %>%
         mutate(ave_storey = input$storey,
                flat_model = input$flat_modelM,
                flat_type = input$flat_type,
                floor_area_sqm = input$floor_area_sqm,
                year = current_year, 
                month = current_month, 
-               remaining_lease = 99 - as.numeric(current_year - 
-                                                   lease_commence_date - as.numeric(current_month)/12)) %>%
+               remaining_lease = 99 - (current_year - lease_commence_date + as.numeric(current_month) / 12)) %>%
         select(-lease_commence_date)
-      sample_obs_before_encoding <- convert_to_categorical(final_row,
-                                                           get_categorical_columns(final_row))
       
-      sample_obs_transformed <- one_hot_encoding(sample_obs_before_encoding, 
-                                                 get_categorical_columns(sample_obs_before_encoding))
-      newdata = rbind.fill(sample_df, sample_obs_transformed)
+      # Data transformation and encoding for ML model input
+      sample_obs_before_encoding <- convert_to_categorical(final_row, get_categorical_columns(final_row))
+      sample_obs_transformed <- one_hot_encoding(sample_obs_before_encoding, get_categorical_columns(sample_obs_before_encoding))
+      newdata <- rbind.fill(sample_df, sample_obs_transformed)
       newdata[is.na(newdata)] <- 0
-      newdata = newdata[2,]
-      newdata = as.matrix(newdata)
+      newdata <- newdata[2,]
+      newdata <- as.matrix(newdata)
+      
+      # ML model prediction
       prediction <- exp(predict(model, newdata))
       
-      # Display the predicted price as a text
-      output$predictedPriceOutput <- renderText({
-        paste("Predicted price:", prediction)
-      })
+      # Construct user selection message
+      selection_message <- paste("Your choice:", street_name(), ",", input$flat_type,
+                                 input$flat_modelM, "FLAT AT LEVEL", input$storey, sep = "\n")
+      
+      # Combine selection message with prediction
+      final_message <- paste(selection_message, "Predicted price:", prediction, sep = "\n\n")
+      
+      # Display the combined message
+      output$priceOutput <- renderText({ final_message })
       
     } else {
-      # Handle the case where no data is found
-      output$predictedPriceOutput <- renderText({
-        "No data found for the provided postal code."
-      })
+      # Handle case where no valid data is found for the postal code
+      output$priceOutput <- renderText({ "Please ensure a valid postal code is selected." })
     }
   })
+  
   
   
   
