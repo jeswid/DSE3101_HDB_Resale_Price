@@ -17,7 +17,10 @@ shinyServer(function(input, output, session) {
     all_address %>%
       filter(postal %in% input$addressM, 
       ) %>%
-      mutate(INFO = paste0(town, " | ", lng, ", ", lat))
+      mutate(INFO = paste(sep = "<br/>",
+                          town, "\n" , 
+                          "Nearest mrt:", `mrt_name`, "\n", 
+                          "Nearest primary school:", `primary_school_name`))
   })
   
   icons <- awesomeIcons(
