@@ -15,7 +15,7 @@ library(sf)
 
 ############# MAP DATA ###############
 SG_map = readRDS("frontend/data/SG_map.rds")
-all_address = read.csv("frontend/data/hdb_block_details.csv") %>%
+all_address = read.csv("frontend/data/unique_hdb_block_details_w_schools_mrt_name.csv") %>%
   rename(lng = long) %>%
   rename("Primary School" = "primary_schools_1km")
 amenities = read.csv("frontend/data/lat_long_for_visualisation.csv")
