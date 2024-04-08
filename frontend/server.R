@@ -130,7 +130,16 @@ shinyServer(function(input, output, session) {
       return(data.frame(Street = "Street name not found"))
     }
   })
- 
+  fittedforecast <- reactive({
+    completerow <- laty %>%
+      filter(postal == input$addressF)
+    
+    if(nrow(completerow) > 0) {
+      return(completerow)
+    } else {
+      return(data.frame(Street = "Street name not found"))
+    }
+  })
  
   
 ###################PREDICTED PRICE TAB #############################################################  
@@ -193,8 +202,8 @@ shinyServer(function(input, output, session) {
   })
   ##### FORECASTED PRICE TAB ###################################################################################
   observeEvent(input$submitforecast, {
-    req(input$address)
-    filtered_row <- fittedprediction()  # Fetch the filtered dataset based on postal code
+    req(input$addressF)
+    filtered_row <- fittedforecast()  # Fetch the filtered dataset based on postal code
 
     if(nrow(filtered_row) > 0) {
       # Prepare geospatial data and additional user inputs for prediction
@@ -204,15 +213,15 @@ shinyServer(function(input, output, session) {
       forecasted_prices = data.frame()
 
       for (i in 1:nrow(month_dummies)) {
-        current_year = month_dummies$year
-        current_month = month_dummies$month
+        current_year = month_dummies$year[i]
+        current_month = month_dummies$month[i]
         current_month <- ifelse(current_month < 10, paste0("0", as.character(current_month)), as.character(current_month))
 
         final_row <- geospatial_data %>%
-          mutate(ave_storey = input$storey,
-                 flat_model = input$flat_modelM,
-                 flat_type = input$flat_type,
-                 floor_area_sqm = input$floor_area_sqm,
+          mutate(ave_storey = input$storeyF,
+                 flat_model = input$flat_modelMF,
+                 flat_type = input$flat_typeF,
+                 floor_area_sqm = input$floor_area_sqmF,
                  year = current_year,
                  month = current_month,
                  remaining_lease = 99 - (current_year - lease_commence_date + as.numeric(current_month) / 12)) %>%
@@ -233,11 +242,11 @@ shinyServer(function(input, output, session) {
 
 
       # Construct user selection message
-      selection_message <- paste("Your choice:", street_name(), ",", input$flat_type,
-                                 input$flat_modelM, "FLAT AT LEVEL", input$storey, sep = "\n")
+      selection_message <- paste("Your choice:", street_name(), ",", input$flat_typeF,
+                                 input$flat_modelMF, "FLAT AT LEVEL", input$storeyF, sep = "\n")
 
       # Combine selection message with prediction
-      output$priceOutput <- renderText({ selection_message })
+      output$priceOutputF <- renderText({ selection_message })
 
       output$forecastChart <- renderPlotly({
         req(input$submitforecast)  # Require that the forecast button has been clicked
@@ -246,6 +255,7 @@ shinyServer(function(input, output, session) {
         graph = ggplot(forecasted_prices, aes(x = months_ahead, y = forecasted_price)) +
           geom_line() +
           labs(title = "Forecasted HDB Prices", x = "Number of months ahead", y = "Price of HDB flat") +
+          scale_x_continuous(breaks = seq(0, input$no_of_years_forecast * 12, by = 4)) +
           theme_minimal()
         ggplotly(graph)
       })

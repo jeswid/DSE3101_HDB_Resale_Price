@@ -1,6 +1,7 @@
 # Converting the user inputs into model output
 library(plyr)
 library(tidyverse)
+library(plotly)
 
 # Fit the obs with 136 variables into the ML model (Does not include resale prices)
 # Below is a sample observation
@@ -119,3 +120,42 @@ generate_month_dummies <- function(years = 2) {
 # Example usage:
 month_dummies <- generate_month_dummies()
 print(month_dummies)
+
+model = readRDS("backend/xgb.rds")
+sample_df = readRDS("frontend/data/sample_obs_inputs.Rds")
+geospatial_data <- hdb %>% select(-c(postal,street))
+month_dummies = generate_month_dummies(1) # Let user input number of years to forecast
+forecasted_prices = data.frame()
+
+for (i in 1:nrow(month_dummies)) {
+  current_year = month_dummies$year[i]
+  current_month = month_dummies$month[i]
+  current_month <- ifelse(current_month < 10, paste0("0", as.character(current_month)), as.character(current_month))
+  
+  final_row <- geospatial_data %>%
+    mutate(ave_storey = 5,
+           flat_model = "2-room",
+           flat_type = "1 ROOM",
+           floor_area_sqm = 44,
+           year = current_year,
+           month = current_month,
+           remaining_lease = 99 - (current_year - lease_commence_date + as.numeric(current_month) / 12)) %>%
+    select(-lease_commence_date)
+  
+  # Data transformation and encoding for ML model input
+  sample_obs_before_encoding <- convert_to_categorical(final_row, get_categorical_columns(final_row))
+  sample_obs_transformed <- one_hot_encoding(sample_obs_before_encoding, get_categorical_columns(sample_obs_before_encoding))
+  newdata <- rbind.fill(sample_df, sample_obs_transformed)
+  newdata[is.na(newdata)] <- 0
+  newdata <- newdata[2,]
+  newdata <- as.matrix(newdata)
+  # ML model prediction
+  prediction <- exp(predict(model, newdata))
+  forecast = data.frame(months_ahead = i - 1, forecasted_price = prediction)
+  forecasted_prices = rbind(forecasted_prices,forecast)
+}
+graph = ggplot(forecasted_prices, aes(x = months_ahead, y = forecasted_price)) +
+  geom_line() +
+  labs(title = "Forecasted HDB Prices", x = "Number of months ahead", y = "Price of HDB flat") +
+  theme_minimal()
+ggplotly(graph)

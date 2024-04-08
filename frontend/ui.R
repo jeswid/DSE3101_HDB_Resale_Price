@@ -92,7 +92,7 @@ ui <- fluidPage(
                ),
                div(id = "sidebar", class = "well",
                    # Your inputs like sliders and select inputs
-                   sliderInput("floor_area_sqm", "Desired Square Meter",
+                   sliderInput("floor_area_sqmF", "Desired Square Meter",
                                min =  min_sqm, max = max_sqm,
                                value = round((min_sqm + max_sqm) / 2), round = TRUE),
                    sliderInput("no_of_years_forecast",
@@ -103,18 +103,18 @@ ui <- fluidPage(
                                step = 1,
                                ticks = TRUE  # Set to TRUE if you want ticks under the slider
                    ),
-                   selectInput("address", "Postal Code", choices = sort(unique(laty$postal), decreasing = TRUE)),
-                   selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
+                   selectInput("addressF", "Postal Code", choices = sort(unique(laty$postal), decreasing = TRUE)),
+                   selectInput("flat_modelMF", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
                                                                         'New Generation', 'Maisonette', 'Apartment', 'Simplified',
                                                                         'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
                                                                         '2-room', 'Executive Maisonette', 'Type S1S2'), 
                                selected = "Model A"),
-                   selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
-                   sliderInput("storey","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
+                   selectInput("flat_typeF", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
+                   sliderInput("storeyF","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
                    
-                   actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary")
+                   actionButton("submitforecast", "Submit HDB 🔎", class = "btn-primary")
                ),
-               verbatimTextOutput("priceOutput")
+               verbatimTextOutput("priceOutputF")
       ),
       
       
