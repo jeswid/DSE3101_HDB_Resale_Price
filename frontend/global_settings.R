@@ -89,3 +89,29 @@ fittedprediction <- reactive({
   }
 })
 
+generate_month_dummies <- function(years = 2) {
+  # Get the current year and month
+  current_date <- Sys.Date()
+  current_year <- as.integer(format(current_date, "%Y"))
+  current_month <- as.integer(format(current_date, "%m"))
+  
+  # Initialize a data frame to store the dummy variables
+  time <- data.frame(year = numeric(), month = character())
+  year = c()
+  month = c()
+  months = years * 12
+  # Iterate over the number of months
+  for (i in 0:months) {
+    # Calculate the year and month for the current iteration
+    next_year <- current_year + floor((current_month + i - 1) / 12)
+    next_month <- ((current_month + i - 1) %% 12) + 1
+    time = rbind(time, c(next_year,next_month))
+  }
+  names(time)[1] = "year"
+  names(time)[2] = "month"
+  return (time)
+}
+
+# Example usage:
+month_dummies <- generate_month_dummies()
+print(month_dummies)

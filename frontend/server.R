@@ -9,6 +9,7 @@ library('shiny')
 library('shinydashboard')
 library('leaflet')
 library('RColorBrewer')
+library("plotly")
 
 shinyServer(function(input, output, session) {
   shinyjs::addClass(selector = "body", class = "sidebar-collapse")
@@ -190,32 +191,89 @@ shinyServer(function(input, output, session) {
           footer = modalButton("Close")
         ))
       } }
-    
-    
-  ##### FORECASTED PRICE TAB ###################################################################################
-    # Reactive expression for forecast data
-    
-    forecastData <- reactive({
-      # Create a function to generate forecast data based on our model.
-      # Return a data frame with at least two columns: 'date' and 'price'
-      # Assume the function is named 'generateForecast' and it accepts year and month as arguments.
-      generateForecast(input$forecastYear, input$forecastMonth)
-    })
-    
-    # Render the forecast line chart
-    output$forecastChart <- renderPlot({
-      req(input$submitforecast)  # Require that the forecast button has been clicked
-      data <- forecastData()     # Fetch the forecast data
-      
-      # Generate the line chart
-      ggplot(data, aes(x = date, y = price)) +
-        geom_line() +
-        labs(title = "Forecasted HDB Prices", x = "Date", y = "Price") +
-        theme_minimal()
-    })
-
   })
-})  
+  ##### FORECASTED PRICE TAB ###################################################################################
+  # Reactive expression for forecast data
+  
+  # forecastData <- reactive({
+  #   # Create a function to generate forecast data based on our model.
+  #   # Return a data frame with at least two columns: 'date' and 'price'
+  #   # Assume the function is named 'generateForecast' and it accepts year and month as arguments.
+  #   generateForecast(input$forecastYear, input$forecastMonth)
+  # })
+  # 
+  # # Render the forecast line chart
+  # output$forecastChart <- renderPlot({
+  #   req(input$submitforecast)  # Require that the forecast button has been clicked
+  #   data <- forecastData()     # Fetch the forecast data
+  # 
+  #   # Generate the line chart
+  #   ggplot(data, aes(x = date, y = price)) +
+  #     geom_line() +
+  #     labs(title = "Forecasted HDB Prices", x = "Date", y = "Price") +
+  #     theme_minimal()
+  # })
+  observeEvent(input$submitforecast, {
+    req(input$address)
+    filtered_row <- fittedprediction()  # Fetch the filtered dataset based on postal code
     
+    if(nrow(filtered_row) > 0) {
+      # Prepare geospatial data and additional user inputs for prediction
+      geospatial_data <- filtered_row %>%
+        select(-c(postal, street))
+      month_dummies = generate_month_dummies() # Let user input number of years to forecast
+      forecasted_prices = data.frame()
+      
+      for (i in 1:nrow(month_dummies)) {
+        current_year = month_dummies$year
+        current_month = month_dummies$month
+        current_month <- ifelse(current_month < 10, paste0("0", as.character(current_month)), as.character(current_month))
+        
+        final_row <- geospatial_data %>%
+          mutate(ave_storey = input$storey,
+                 flat_model = input$flat_modelM,
+                 flat_type = input$flat_type,
+                 floor_area_sqm = input$floor_area_sqm,
+                 year = current_year, 
+                 month = current_month, 
+                 remaining_lease = 99 - (current_year - lease_commence_date + as.numeric(current_month) / 12)) %>%
+          select(-lease_commence_date)
+        
+        # Data transformation and encoding for ML model input
+        sample_obs_before_encoding <- convert_to_categorical(final_row, get_categorical_columns(final_row))
+        sample_obs_transformed <- one_hot_encoding(sample_obs_before_encoding, get_categorical_columns(sample_obs_before_encoding))
+        newdata <- rbind.fill(sample_df, sample_obs_transformed)
+        newdata[is.na(newdata)] <- 0
+        newdata <- newdata[2,]
+        newdata <- as.matrix(newdata)
+        # ML model prediction
+        prediction <- exp(predict(model, newdata))
+        forecast = data.frame(months_ahead = i - 1, forecasted_price = prediction)
+        forecasted_prices = rbind(forecasted_prices,forecast)
+      }
+      
+      
+      # Construct user selection message
+      selection_message <- paste("Your choice:", street_name(), ",", input$flat_type,
+                                 input$flat_modelM, "FLAT AT LEVEL", input$storey, sep = "\n")
+      
+      # Combine selection message with prediction
+      output$priceOutput <- renderText({ selection_message })
+      
+      output$forecastChart <- renderPlotly({
+        req(input$submitforecast)  # Require that the forecast button has been clicked
+
+        # Generate the line chart
+        graph = ggplot(forecasted_prices, aes(x = months_ahead, y = forecasted_price)) +
+          geom_line() +
+          labs(title = "Forecasted HDB Prices", x = "Number of months ahead", y = "Price of HDB flat") +
+          theme_minimal()
+        ggplotly(graph)
+      })
+      }
+  }) 
+    
+})  
+  
     
  
