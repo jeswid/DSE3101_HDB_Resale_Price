@@ -221,7 +221,7 @@ shinyServer(function(input, output, session) {
       # Prepare geospatial data and additional user inputs for prediction
       geospatial_data <- filtered_row %>%
         select(-c(postal, street))
-      month_dummies = generate_month_dummies() # Let user input number of years to forecast
+      month_dummies = input_no_of_years_forecast() # Let user input number of years to forecast
       forecasted_prices = data.frame()
       
       for (i in 1:nrow(month_dummies)) {

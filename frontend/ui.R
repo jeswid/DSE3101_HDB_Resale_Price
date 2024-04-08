@@ -84,17 +84,25 @@ ui <- fluidPage(
       
       #### FORECASTED PRICE TAB 
       tabPanel("Forecasted Price", value = "ForecastedPrice",
-               
                fluidRow(
                  column(12,
-                        # Content for Forecasted Price tab
-                        textOutput("forecastpriceOutput") )),
+                        # Display for forecasted price output
+                        plotlyOutput("forecastChart")  # This line adds the Plotly graph output
+                 )
+               ),
                div(id = "sidebar", class = "well",
+                   # Your inputs like sliders and select inputs
                    sliderInput("floor_area_sqm", "Desired Square Meter",
                                min =  min_sqm, max = max_sqm,
-                               value = round((min_sqm + max_sqm) / 2), round = TRUE), 
-                   numericInput("forecastYear", "Select Year", value = format(Sys.Date(), "%Y")),
-                   selectInput("forecastMonth", "Select Month", choices = month.name, selected = format(Sys.Date(), "%B")),
+                               value = round((min_sqm + max_sqm) / 2), round = TRUE),
+                   sliderInput("no_of_years_forecast",
+                               "Forecasting Ahead:",
+                               min = 1,
+                               max = 5,
+                               value = 2,  # Default value
+                               step = 1,
+                               ticks = TRUE  # Set to TRUE if you want ticks under the slider
+                   ),
                    selectInput("address", "Postal Code", choices = sort(unique(laty$postal), decreasing = TRUE)),
                    selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
                                                                         'New Generation', 'Maisonette', 'Apartment', 'Simplified',
@@ -104,8 +112,12 @@ ui <- fluidPage(
                    selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
                    sliderInput("storey","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
                    
-                   actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary") )),
-      verbatimTextOutput("priceOutput")
+                   actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary")
+               ),
+               verbatimTextOutput("priceOutput")
+      ),
+      
+      
       
     ))
   
