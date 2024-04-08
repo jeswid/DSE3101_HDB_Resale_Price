@@ -47,7 +47,8 @@ ui <- fluidPage(
                         tableOutput("mrt_table"), 
                         tableOutput("sch_table"), 
                         tableOutput("supermarket_table"), 
-                        tableOutput("hawkers_table")
+                        tableOutput("hawkers_table"),
+                        tableOutput("hospitals_table")
                  ),
                  
                  # Map output

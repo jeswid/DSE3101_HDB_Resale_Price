@@ -82,13 +82,24 @@ shinyServer(function(input, output, session) {
   data_table_hawker <- reactive({
     all_address %>%
       filter(postal %in% input$addressM) %>%
-      select(`nearest_hawkers`, `dist_to_nearest_hawkers`, `hawkers_1km`) %>%
-      rename("Nearest Hawker Centre" = `nearest_hawkers`,
+      select(`name_of_centre`, `dist_to_nearest_hawkers`, `hawkers_1km`) %>%
+      rename("Nearest Hawker Centre" = `name_of_centre`,
              "Distance to nearest Hawker Centre (in km)" = `dist_to_nearest_hawkers`, 
              "Hawker Centres within 1km" = `hawkers_1km`)
   })
   
   output$hawkers_table <- renderTable({data_table_hawker()})
+  
+  data_table_hospital <- reactive({
+    all_address %>%
+      filter(postal %in% input$addressM) %>%
+      select(`nearest_hospital`, `dist_to_nearest_hospital`, `hospitals_1km`) %>%
+      rename("Nearest Hospital" = `nearest_hospital`,
+             "Distance to nearest Hospital (in km)" = `dist_to_nearest_hospital`, 
+             "Hospitals within 1km" = `hospitals_1km`)
+  })
+  
+  output$hospitals_table <- renderTable({data_table_hospital()})
 
   ########################## HOME TAB ######################################################
   output$homeOutput <- renderUI({
