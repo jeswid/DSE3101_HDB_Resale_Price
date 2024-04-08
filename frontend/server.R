@@ -236,7 +236,7 @@ shinyServer(function(input, output, session) {
         newdata <- as.matrix(newdata)
         # ML model prediction
         prediction <- exp(predict(model, newdata))
-        forecast = data.frame(months_ahead = i - 1, forecasted_price = prediction)
+        forecast = data.frame(months_ahead = (i - 1)/12, forecasted_price = prediction)
         forecasted_prices = rbind(forecasted_prices,forecast)
       }
 
@@ -254,8 +254,8 @@ shinyServer(function(input, output, session) {
         # Generate the line chart
         graph = ggplot(forecasted_prices, aes(x = months_ahead, y = forecasted_price)) +
           geom_line() +
-          labs(title = "Forecasted HDB Prices", x = "Number of months ahead", y = "Price of HDB flat") +
-          scale_x_continuous(breaks = seq(0, input$no_of_years_forecast * 12, by = 4)) +
+          labs(title = "Forecasted HDB Prices", x = "Number of years ahead", y = "Price of HDB flat") +
+          scale_x_continuous(breaks = seq(0, input$no_of_years_forecast, by = 0.25)) +
           theme_minimal()
         ggplotly(graph)
       })

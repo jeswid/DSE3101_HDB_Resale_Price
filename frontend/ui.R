@@ -96,7 +96,7 @@ ui <- fluidPage(
                                min =  min_sqm, max = max_sqm,
                                value = round((min_sqm + max_sqm) / 2), round = TRUE),
                    sliderInput("no_of_years_forecast",
-                               "Forecasting Ahead:",
+                               "Forecasting Ahead in years:",
                                min = 1,
                                max = 5,
                                value = 2,  # Default value
