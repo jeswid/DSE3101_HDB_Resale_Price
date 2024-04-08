@@ -94,17 +94,16 @@ newdata = as.matrix(newdata)
 prediction <- exp(predict(xgb.fit, newdata))
 prediction
 
-generate_month_dummies <- function(years = 2) {
+generate_month_dummies <- function() {
   # Get the current year and month
-  current_date <- Sys.Date()
-  current_year <- as.integer(format(current_date, "%Y"))
-  current_month <- as.integer(format(current_date, "%m"))
+  current_year <- 2017
+  current_month <- 1
   
   # Initialize a data frame to store the dummy variables
   time <- data.frame(year = numeric(), month = character())
   year = c()
   month = c()
-  months = years * 12
+  months = (2024 - 2017) * 12 + 3 # No of months from Jan 2017 to Apr 2024
   # Iterate over the number of months
   for (i in 0:months) {
     # Calculate the year and month for the current iteration
@@ -124,7 +123,7 @@ print(month_dummies)
 model = readRDS("backend/xgb.rds")
 sample_df = readRDS("frontend/data/sample_obs_inputs.Rds")
 geospatial_data <- hdb %>% select(-c(postal,street))
-month_dummies = generate_month_dummies(1) # Let user input number of years to forecast
+month_dummies = generate_month_dummies() 
 forecasted_prices = data.frame()
 
 for (i in 1:nrow(month_dummies)) {
@@ -151,11 +150,11 @@ for (i in 1:nrow(month_dummies)) {
   newdata <- as.matrix(newdata)
   # ML model prediction
   prediction <- exp(predict(model, newdata))
-  forecast = data.frame(months_ahead = i - 1, forecasted_price = prediction)
+  forecast = data.frame(months_ahead = 2017 + (i - 1)/12, forecasted_price = prediction)
   forecasted_prices = rbind(forecasted_prices,forecast)
 }
 graph = ggplot(forecasted_prices, aes(x = months_ahead, y = forecasted_price)) +
   geom_line() +
-  labs(title = "Forecasted HDB Prices", x = "Number of months ahead", y = "Price of HDB flat") +
+  labs(title = "Forecasted HDB Prices", x = "Year", y = "Price of HDB flat") +
   theme_minimal()
 ggplotly(graph)

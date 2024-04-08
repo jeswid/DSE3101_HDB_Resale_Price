@@ -90,17 +90,16 @@ fittedprediction <- reactive({
   }
 })
 
-generate_month_dummies <- function(years = 2) {
+generate_month_dummies <- function() {
   # Get the current year and month
-  current_date <- Sys.Date()
-  current_year <- as.integer(format(current_date, "%Y"))
-  current_month <- as.integer(format(current_date, "%m"))
+  current_year <- 2017
+  current_month <- 1
   
   # Initialize a data frame to store the dummy variables
   time <- data.frame(year = numeric(), month = character())
   year = c()
   month = c()
-  months = years * 12
+  months = (2024 - 2017) * 12 + 3 # No of months from Jan 2017 to Apr 2024
   # Iterate over the number of months
   for (i in 0:months) {
     # Calculate the year and month for the current iteration

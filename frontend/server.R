@@ -187,7 +187,7 @@ shinyServer(function(input, output, session) {
       # Show the predicted price in a modal dialog
       if(nrow(filtered_row) > 0) {
         showModal(modalDialog(
-          title = "Predicted Price",
+          title = "Predicted Price of HDB Flat",
           h3(paste("$", formatC(prediction, format = "f", big.mark = ",", digits = 0), sep="")),
           footer = modalButton("Close")
         ))
@@ -209,7 +209,7 @@ shinyServer(function(input, output, session) {
       # Prepare geospatial data and additional user inputs for prediction
       geospatial_data <- filtered_row %>%
         select(-c(postal, street))
-      month_dummies = generate_month_dummies(input$no_of_years_forecast) # Let user input number of years to forecast
+      month_dummies = generate_month_dummies() # Let user input number of years to forecast
       forecasted_prices = data.frame()
 
       for (i in 1:nrow(month_dummies)) {
@@ -236,14 +236,14 @@ shinyServer(function(input, output, session) {
         newdata <- as.matrix(newdata)
         # ML model prediction
         prediction <- exp(predict(model, newdata))
-        forecast = data.frame(months_ahead = (i - 1)/12, forecasted_price = prediction)
+        forecast = data.frame(year = 2017 + (i - 1)/12, predicted_price = prediction)
         forecasted_prices = rbind(forecasted_prices,forecast)
       }
 
 
       # Construct user selection message
-      selection_message <- paste("Your choice:", street_name(), ",", input$flat_typeF,
-                                 input$flat_modelMF, "FLAT AT LEVEL", input$storeyF, sep = "\n")
+      selection_message <- paste("Your choice:", street_name(), input$flat_typeF,
+                                 input$flat_modelMF, paste("FLAT AT LEVEL", input$storeyF), sep = "\n")
 
       # Combine selection message with prediction
       output$priceOutputF <- renderText({ selection_message })
@@ -252,10 +252,10 @@ shinyServer(function(input, output, session) {
         req(input$submitforecast)  # Require that the forecast button has been clicked
 
         # Generate the line chart
-        graph = ggplot(forecasted_prices, aes(x = months_ahead, y = forecasted_price)) +
+        graph = ggplot(forecasted_prices, aes(x = year, y = predicted_price)) +
           geom_line() +
-          labs(title = "Forecasted HDB Prices", x = "Number of years ahead", y = "Price of HDB flat") +
-          scale_x_continuous(breaks = seq(0, input$no_of_years_forecast, by = 0.25)) +
+          labs(title = "Trend of HDB Prices", x = "Year", y = "Price of HDB flat") +
+          scale_x_continuous(breaks = seq(2017,2024.25)) +
           theme_minimal()
         ggplotly(graph)
       })
