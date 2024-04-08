@@ -262,7 +262,7 @@ shinyServer(function(input, output, session) {
       
       output$forecastChart <- renderPlotly({
         req(input$submitforecast)  # Require that the forecast button has been clicked
-
+        
         # Generate the line chart
         graph = ggplot(forecasted_prices, aes(x = months_ahead, y = forecasted_price)) +
           geom_line() +
@@ -270,6 +270,7 @@ shinyServer(function(input, output, session) {
           theme_minimal()
         ggplotly(graph)
       })
+      
       }
   }) 
     
