@@ -16,6 +16,7 @@ library('shinydashboard')
 library('leaflet')
 library('RColorBrewer')
 library(sf)
+library("plotly")
 
 ############# MAP DATA ###############
 SG_map = readRDS("frontend/data/SG_map.rds")
@@ -111,7 +112,3 @@ generate_month_dummies <- function(years = 2) {
   names(time)[2] = "month"
   return (time)
 }
-
-# Example usage:
-month_dummies <- generate_month_dummies()
-print(month_dummies)
