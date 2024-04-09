@@ -123,21 +123,23 @@ shinyServer(function(input, output, session) {
   ########################## HOME TAB ######################################################
   output$homeOutput <- renderUI({
     HTML(paste0('
-    <div style="font-size: 15px; line-height: 1.6;">
-      <h2>Introduction</h2>
-      <p>First-time home buyers frequently face challenges such as planning their budget, selecting a suitable location, and understanding the dynamics of the property market.</p>
-      <p>Traditionally, house prices have been thought to reflect their proximity to urban centers, transportation networks, and amenities. Yet, the real connection between a property\'s practical benefits and its market value can be obscured by casual discussions or the perspectives of sales agents.</p>
-      <p>Our aim is to resolve these issues by providing buyers with crucial knowledge, enabling them to make informed decisions when purchasing their ideal home. This, in turn, reduces their reliance on external intermediaries like property agents.</p>
-      <h2>Data Sources</h2>
-      <p>Our data are meticulously curated from a variety of sources to ensure a balanced and precise experience for users of our website:</p>
-      <ul>
-        <li>HDB Resale Prices and Transaction History: Acquired from the authoritative database at data.gov.sg, offering insight into historical trends and current market values.</li>
-        <li>Amenities, Transportation Links, and Proximity to the Central Business District (CBD): Sourced from OneMap.sg, this data provides comprehensive details on local infrastructure, enhancing our understanding of property desirability and accessibility.</li>
-        <li>Demographic and Household Data: Compiled from the Singapore Department of Statistics, offering a detailed overview of demographic shifts and household compositions, pivotal for informed decision-making in the property market.</li>
-      </ul>
-    </div>'
+  <div style="font-size: 15px; line-height: 1.6;">
+    <h2>Introduction</h2>
+    <p>First-time home buyers frequently face challenges such as planning their budget, selecting a suitable location, and understanding the dynamics of the property market.</p>
+    <p>Our website will provide users a map of Singapore to search for their desired HDB block and view curated information about the nearest amenities to their HDB block. Buyers can select the desired characteristics of their HDB resale flat and a predicted price of the HDB resale flat will be churned out. Finally, they can view trends in prices of that HDB resale flat from 2017 - 2024 via a graph. The prediction of prices and plotting of the graph is powered by our Extreme Gradient Boosting Machine Learning Model, which we have found to perform better than our benchmark ordinary least squares regression.</p>
+    <p>Traditionally, house prices have been thought to reflect their proximity to urban centers, transportation networks, and amenities. Yet, the real connection between a property\'s practical benefits and its market value can be obscured by casual discussions or the perspectives of sales agents.</p>
+    <p>Our aim is to resolve these issues by providing buyers with crucial knowledge, enabling them to make informed decisions when purchasing their ideal home. This, in turn, reduces their reliance on external intermediaries like property agents.</p>
+    <h2>Data Sources</h2>
+    <p>Our data are meticulously curated from a variety of sources to ensure a balanced and precise experience for users of our website:</p>
+    <ul>
+      <li>HDB Resale Prices and Transaction History: Acquired from the authoritative database at data.gov.sg, offering insight into historical trends and current market values.</li>
+      <li>Amenities, Transportation Links, and Proximity to the Central Business District (CBD): Sourced from OneMap.sg, this data provides comprehensive details on local infrastructure, enhancing our understanding of property desirability and accessibility.</li>
+      <li>Demographic and Household Data: Compiled from the Singapore Department of Statistics, offering a detailed overview of demographic shifts and household compositions, pivotal for informed decision-making in the property market.</li>
+    </ul>
+  </div>'
     ))
   })
+  
   
 
   ######################## FUNCTIONS NEEDED ########################################################

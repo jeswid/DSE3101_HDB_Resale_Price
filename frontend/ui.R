@@ -10,6 +10,43 @@ max_sqm <- max(all_address_pred$floor_area_sqm, na.rm = TRUE)
 ui <- dashboardPage(
   dashboardHeader(title = "HDB PROJECT"),
   dashboardSidebar(
+    tags$head(
+      tags$style(HTML("
+        /* Header and Titles CSS */
+        .main-header .logo {
+          background-color: #FFFFFF !important; /* White background */
+          color: #000000 !important; /* Black text */
+        }
+        .main-header .navbar {
+          background-color: #FFFFFF !important; /* White background */
+        }
+        .main-header .navbar .sidebar-toggle {
+          color: #000000 !important; /* Black text */
+        }
+        
+        /* Sidebar CSS */
+        .main-sidebar {
+          background-color: #8B0000 !important; /* Dark red background */
+        }
+        .sidebar-menu li > a {
+          color: #ffffff !important; /* White text for better contrast */
+        }
+        .sidebar-menu .treeview-menu > li > a {
+          color: #ffffff !important;
+        }
+        .sidebar-menu li.active > a {
+          border-left-color: #ffffff !important;
+        }
+        .sidebar-menu li.header {
+          color: #ffffff !important;
+        }
+        
+        /* Custom Homepage CSS */
+        .content-wrapper {
+          background-color: #FFFFF !important; /* Cream background for the home page */
+        }
+      "))
+    ),
     sidebarMenu(
       menuItem("Home", tabName = "home", icon = icon("home")),
       menuItem("Geospatial Analysis", tabName = "geospatial", icon = icon("map")),
@@ -18,6 +55,27 @@ ui <- dashboardPage(
     )
   ),
   dashboardBody(
+    tags$head(
+      tags$style(HTML("
+        /* CSS to change the sidebar background color */
+        .main-sidebar {
+          background-color: #660000 !important;
+        }
+        /* Adjusting text and icon color for better visibility */
+        .sidebar-menu li > a {
+          color: #ffffff !important;
+        }
+        .sidebar-menu .treeview-menu > li > a {
+          color: #ffffff !important;
+        }
+        .sidebar-menu li.active > a {
+          border-left-color: #ffffff !important;
+        }
+        .sidebar-menu li.header {
+          color: #ffffff !important;
+        }
+      "))
+    ),
     tabItems(
       tabItem(tabName = "home",
               fluidRow(
