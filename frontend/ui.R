@@ -86,6 +86,7 @@ ui <- fluidPage(
       
       #### FORECASTED PRICE TAB 
       tabPanel("Forecasted Price", value = "ForecastedPrice",
+               verbatimTextOutput("priceOutputF"),
                fluidRow(
                  column(12,
                         # Display for forecasted price output
@@ -107,8 +108,8 @@ ui <- fluidPage(
                    sliderInput("storeyF","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
                    
                    actionButton("submitforecast", "Submit HDB 🔎", class = "btn-primary")
-               ),
-               verbatimTextOutput("priceOutputF")
+               )
+               
       ),
       
       
