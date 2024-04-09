@@ -268,12 +268,17 @@ shinyServer(function(input, output, session) {
         prediction <- exp(predict(model, newdata))
         forecast = data.frame(year = 2017 + (i - 1)/12, predicted_price = prediction)
         forecasted_prices = rbind(forecasted_prices,forecast)
+        if (i == nrow(month_dummies)) {
+          lease_remained = final_row$remaining_lease
+        }
       }
 
 
       # Construct user selection message
-      selection_message <- paste("Your choice:", street_name(), input$flat_typeF,
-                                 input$flat_modelMF, paste("FLAT AT LEVEL", input$storeyF), sep = "\n")
+      selection_message <- paste("HDB Price Trend:", paste("BLK", street_name()), input$flat_typeF,
+                                 input$flat_modelMF, paste("FLAT AT LEVEL", input$storeyF), 
+                                 "with remaining lease at present of", 
+                                 round(lease_remained,2),"years")
 
       # Combine selection message with prediction
       output$priceOutputF <- renderText({ selection_message })
