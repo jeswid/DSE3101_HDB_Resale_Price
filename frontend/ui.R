@@ -1,6 +1,7 @@
 library(shiny)
 library(leaflet)
 library(shinyjs)
+library(plotly)
 
 min_sqm <- min(all_address_pred$floor_area_sqm, na.rm = TRUE)
 max_sqm <- max(all_address_pred$floor_area_sqm, na.rm = TRUE)
@@ -56,7 +57,7 @@ ui <- fluidPage(
                         # Sidebar content for geospatial analysis goes here (e.g., inputs, action buttons, etc.)
                         # It will only be visible when the Geospatial Analysis tab is active
                         div(id = "sidebar", class = "well",
-                            selectInput("addressM","Type or Select Postal Code", choices = sort(unique(all_address$postal), decreasing = TRUE)),
+                            selectInput("addressM","Type or Select Postal Code", selected = "", choices = sort(unique(all_address$postal), decreasing = TRUE)),
                             actionButton("submitmap", "Submit HDB 🔎", class = "btn-primary") ) ), ) ),
       
       

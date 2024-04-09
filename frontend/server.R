@@ -19,12 +19,6 @@ shinyServer(function(input, output, session) {
     paste("You have selected:", "BLK", as.character(text_data()$street))
   })
   
-  data <- reactive({
-    all_address %>%
-      filter(postal %in% input$addressM) %>%
-      mutate(INFO = paste(street))
-  })
-  
   text_data <- reactive({
     all_address %>%
       filter(postal %in% input$addressM)
@@ -39,12 +33,37 @@ shinyServer(function(input, output, session) {
   )
   
   
-  output$map <- renderLeaflet({
-    leaflet(data = data()) %>%
-      setView(lng = 103.8198, lat = 1.28, zoom = 10.5) %>%
-      addTiles() %>%
-      addAwesomeMarkers(~lng, ~lat, icon = icons, popup = ~INFO, label = ~INFO) 
-  })
+   data <- reactive({
+     all_address %>%
+       filter(postal %in% input$addressM) %>%
+       mutate(INFO = paste(street))
+   })
+
+   output$map <- renderLeaflet({
+     leaflet(data = data()) %>%
+       setView(lng = 103.8198, lat = 1.28, zoom = 10.5) %>%
+       addTiles() %>%
+       addAwesomeMarkers(~lng, ~lat, icon = icons, popup = ~INFO, label = ~INFO)
+   })
+  
+  
+    
+  
+    observeEvent(input$submitmap, {
+      req(input$addressM)
+      data = data()
+      click <- input$submitmap
+      if (!is.null(click)) {
+        lng <- data$lng
+        lat <- data$lat
+  
+        # Update map view to zoom into the clicked location
+        leafletProxy("map") %>%
+          setView(lng = lng, lat = lat, zoom = 18)
+      }
+    })
+  
+
   
   data_table_mrt <- reactive({
     all_address %>%
