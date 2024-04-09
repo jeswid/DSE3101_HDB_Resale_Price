@@ -17,11 +17,12 @@ library('leaflet')
 library('RColorBrewer')
 library(sf)
 library("plotly")
+library(stringr)
 
 ############# MAP DATA ###############
 SG_map = readRDS("frontend/data/SG_map.rds")
 all_address = read.csv("frontend/data/hdb_blocks_w_schools_mrt_hawkers_name.csv") %>%
-  rename(lng = long) 
+  rename(lng = long) %>% mutate(name_of_centre = str_to_upper(name_of_centre), primary_school_name = str_to_upper(primary_school_name))
 amenities = read.csv("frontend/data/lat_long_for_visualisation.csv")
 hawker_centres = read.csv("frontend/data/hawker_centres_geocode.csv")
 hospitals = read.csv("frontend/data/hospitals_geocode.csv")
