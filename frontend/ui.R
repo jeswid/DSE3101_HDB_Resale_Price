@@ -14,7 +14,7 @@ ui <- dashboardPage(
       menuItem("Home", tabName = "home", icon = icon("home")),
       menuItem("Geospatial Analysis", tabName = "geospatial", icon = icon("map")),
       menuItem("Predicted Price", tabName = "predicted", icon = icon("dollar")),
-      menuItem("Forecasted Price", tabName = "forecasted", icon = icon("chart-line"))
+      menuItem("Trend Analysis", tabName = "forecasted", icon = icon("chart-line"))
     )
   ),
   dashboardBody(
