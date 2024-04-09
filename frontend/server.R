@@ -290,7 +290,8 @@ shinyServer(function(input, output, session) {
           geom_line() +
           labs(title = "Trend of HDB Prices", x = "Year", y = "Price of HDB flat") +
           scale_x_continuous(breaks = seq(2017,2024.25)) +
-          theme_minimal()
+          theme_minimal() +
+          scale_y_continuous(labels= scales::dollar)
         ggplotly(graph)
       })
 
