@@ -206,13 +206,7 @@ shinyServer(function(input, output, session) {
       
       # ML model prediction
       prediction <- exp(predict(model, newdata))
-      
-      # Construct user selection message
-      selection_message <- paste("Your choice:", street_name(), ",", input$flat_type,
-                                 input$flat_modelM, "FLAT AT LEVEL", input$storey, sep = "\n")
-      
-      # Combine selection message with prediction
-      output$priceOutput <- renderText({ selection_message })
+
       
       # Show the predicted price in a modal dialog
       if(nrow(filtered_row) > 0) {
