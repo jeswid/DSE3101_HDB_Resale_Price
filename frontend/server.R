@@ -217,7 +217,10 @@ shinyServer(function(input, output, session) {
       # Show the predicted price in a modal dialog
       if(nrow(filtered_row) > 0) {
         showModal(modalDialog(
-          title = "Predicted Price of HDB Flat",
+          title ="Predicted Price of the HDB resale price at:",
+          h4(paste(paste("BLK", street_name()) , input$flat_type, input$flat_modelM, 
+                   "FLAT at LEVEL", input$storey), sep = "\n"),
+          h4(paste("REMAINING LEASE:",round(final_row$remaining_lease,2),"years"), sep = "\n"),
           h3(paste("$", formatC(prediction, format = "f", big.mark = ",", digits = 0), sep="")),
           footer = modalButton("Close")
         ))

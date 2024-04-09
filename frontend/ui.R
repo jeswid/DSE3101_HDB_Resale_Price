@@ -58,7 +58,7 @@ ui <- fluidPage(
                         # It will only be visible when the Geospatial Analysis tab is active
                         div(id = "sidebar", class = "well",
                             selectInput("addressM","Type or Select Postal Code", selected = "", choices = sort(unique(all_address$postal), decreasing = TRUE)),
-                            actionButton("submitmap", "Submit HDB 🔎", class = "btn-primary") ) ), ) ),
+                            actionButton("submitmap", "Click to zoom 🔎", class = "btn-primary") ) ), ) ),
       
       
       tabPanel("Predicted Price", value = "PredictedPrice",
