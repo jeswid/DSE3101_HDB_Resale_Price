@@ -9,6 +9,8 @@ library('shiny')
 library('shinydashboard')
 library('leaflet')
 library('RColorBrewer')
+library('lubridate')
+library('anytime')
 
 shinyServer(function(input, output, session) {
   shinyjs::addClass(selector = "body", class = "sidebar-collapse")
@@ -265,7 +267,7 @@ shinyServer(function(input, output, session) {
         newdata <- as.matrix(newdata)
         # ML model prediction
         prediction <- exp(predict(model, newdata))
-        forecast = data.frame(year = 2017 + (i - 1)/12, predicted_price = prediction)
+        forecast = data.frame(year = 2017 + (i)/12, predicted_price = prediction)
         forecasted_prices = rbind(forecasted_prices,forecast)
         if (i == nrow(month_dummies)) {
           lease_remained = final_row$remaining_lease
@@ -284,15 +286,24 @@ shinyServer(function(input, output, session) {
 
       output$forecastChart <- renderPlotly({
         req(input$submitforecast)  # Require that the forecast button has been clicked
+        
+        # Convert decimal years to dates
+        forecasted_prices$date <- my(paste(ifelse(round((forecasted_prices$year - floor(forecasted_prices$year)) * 12) == 0, 
+                                                  12, round((forecasted_prices$year - floor(forecasted_prices$year)) * 12)), 
+                                           ifelse(round((forecasted_prices$year - floor(forecasted_prices$year)) * 12) == 0, 
+                                                  (floor(forecasted_prices$year)-1), floor(forecasted_prices$year)),sep = "-"))
 
         # Generate the line chart
-        graph = ggplot(forecasted_prices, aes(x = year, y = predicted_price)) +
-          geom_line() +
-          labs(title = "Trend of HDB Prices", x = "Year", y = "Price of HDB flat") +
-          scale_x_continuous(breaks = seq(2017,2024.25)) +
-          theme_minimal() +
-          scale_y_continuous(labels= scales::dollar)
-        ggplotly(graph)
+        # Create plotly graph
+        p <- plot_ly(data = forecasted_prices, x = ~date, y = ~predicted_price, type = 'scatter', mode = 'lines',
+                text = ~paste("Date: ", date, paste0("<br>", "Price: $", round(predicted_price, 2))),
+                hoverinfo = 'text') %>%
+          layout(title = "Trend of HDB Prices",
+                 xaxis = list(title = "Year"),
+                 yaxis = list(title = "Price of HDB flat", tickformat = "$"))
+
+        p
+        
       })
 
       }
