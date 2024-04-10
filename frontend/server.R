@@ -124,6 +124,7 @@ shinyServer(function(input, output, session) {
 
   ########################## HOME TAB ######################################################
   output$homeOutput <- renderUI({
+    tags$video(src = "hdb.gif.mp4", type = "video/mp4", autoplay = TRUE, loop = TRUE, controls = TRUE, style = "width:100%;")
     HTML(paste0('
   <div style="font-size: 15px; line-height: 1.6;">
     <h2>Introduction</h2>
@@ -215,7 +216,7 @@ shinyServer(function(input, output, session) {
       # Show the predicted price in a modal dialog
       if(nrow(filtered_row) > 0) {
         showModal(modalDialog(
-          title ="Predicted Price of the HDB resale price at:",
+          title ="The predicted price of the HDB resale price at:",
           h4(paste(paste("BLK", street_name()) , input$flat_type, input$flat_modelM, 
                    "FLAT at LEVEL", input$storey), sep = "\n"),
           h4(paste("REMAINING LEASE:",round(final_row$remaining_lease,2),"years"), sep = "\n"),
