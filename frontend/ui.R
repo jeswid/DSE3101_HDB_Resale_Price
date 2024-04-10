@@ -80,7 +80,9 @@ ui <- dashboardPage(
       tabItem(tabName = "home",
               fluidRow(
                 column(12,
-                       uiOutput("homeOutput"))
+                       uiOutput("homeOutput")),
+                column(width = 7,
+                       img(src="hdb.JPG", width = "100%", height = "100%")
               )
       ),
       tabItem(tabName = "geospatial",
