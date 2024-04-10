@@ -14,7 +14,6 @@ library('anytime')
 library('knitr')
 library('kableExtra')
 
-install.packages("kableExtra")
 
 
 shinyServer(function(input, output, session) {
