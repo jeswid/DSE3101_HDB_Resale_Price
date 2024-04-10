@@ -82,9 +82,9 @@ ui <- dashboardPage(
                 column(12,
                        uiOutput("homeOutput")),
                 column(width = 7,
-                       img(src="hdb.JPG", width = "100%", height = "100%")
+                       img(src="hdb.JPG", style="display: block; margin-left: auto; margin-right: auto; width: 100%;")
               )
-      ),
+      )),
       tabItem(tabName = "geospatial",
               fluidRow(
                 column(9,
@@ -149,3 +149,4 @@ ui <- dashboardPage(
     )
   )
 )
+
