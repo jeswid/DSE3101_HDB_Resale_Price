@@ -277,7 +277,7 @@ shinyServer(function(input, output, session) {
   ##### FORECASTED PRICE TAB ###################################################################################
   output$intro1 <- renderText({paste("How to use: Use the sliders to key in the desired house size and storeys, 
                                     as well as key in the postal code, flat model and flat type to see 
-                                    the trend analysis of your chosen HDB unit")})
+                                    the price trend of your chosen HDB unit")})
   
   observeEvent(input$submitforecast, {
     req(input$addressF)
