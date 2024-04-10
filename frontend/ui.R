@@ -88,6 +88,7 @@ ui <- dashboardPage(
       tabItem(tabName = "geospatial",
               fluidRow(
                 column(9,
+                       textOutput("intro2"),
                        verbatimTextOutput("geoSelectionOutput"),
                        leafletOutput("map", width = "100%", height = "600px"), 
                        DTOutput("mrt_table"),

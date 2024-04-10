@@ -21,6 +21,7 @@ shinyServer(function(input, output, session) {
   shinyjs::addClass(selector = "body", class = "sidebar-collapse")
   
   ############## MAP TAB ##################################################################
+  output$intro2 <- renderText({paste("How to use: Type or Select HDB postal code")})
   
   output$geoSelectionOutput <- renderText({
     paste("You have selected:", "BLK", as.character(text_data()$street))
@@ -273,11 +274,11 @@ shinyServer(function(input, output, session) {
   })
   
   output$intro <- renderText({paste("How to use: Use the sliders to key in the desired house size and storeys, 
-                                    as well as key in the postal code, flat model and flat type to see 
+                                    as well as key in the HDB postal code, flat model and flat type to see 
                                     the predicted price of your chosen HDB unit")})
   ##### FORECASTED PRICE TAB ###################################################################################
   output$intro1 <- renderText({paste("How to use: Use the sliders to key in the desired house size and storeys, 
-                                    as well as key in the postal code, flat model and flat type to see 
+                                    as well as key in the HDB postal code, flat model and flat type to see 
                                     the price trend of your chosen HDB unit")})
   
   observeEvent(input$submitforecast, {
