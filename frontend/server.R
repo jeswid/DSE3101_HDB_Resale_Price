@@ -11,6 +11,10 @@ library('leaflet')
 library('RColorBrewer')
 library('lubridate')
 library('anytime')
+library('knitr')
+library('kableExtra')
+
+
 
 shinyServer(function(input, output, session) {
   shinyjs::addClass(selector = "body", class = "sidebar-collapse")
@@ -64,64 +68,98 @@ shinyServer(function(input, output, session) {
           setView(lng = lng, lat = lat, zoom = 18)
       }
     })
+    
+    data_table_mrt <- reactive({
+      all_address %>%
+        filter(postal %in% input$addressM) %>%
+        select(`mrt_name`, `dist_to_nearest_mrt`, `mrt_1km`) %>%
+        rename("Nearest MRT Station" = `mrt_name`,
+               "Distance to nearest MRT (in km)" = `dist_to_nearest_mrt`,
+               "MRT stations within 1km" = `mrt_1km`)
+    })
+    
+    output$mrt_table <- renderDT({
+      datatable(data_table_mrt(),
+                options = list(
+                  searching = FALSE, 
+                  paging = FALSE, 
+                  rownames = FALSE
+                ))
+    })
+    
+    data_table_sch <- reactive({
+      all_address %>%
+        filter(postal %in% input$addressM) %>%
+        select(`primary_school_name`, `dist_to_nearest_primary_schools`, `primary_schools_1km`) %>%
+        rename("Nearest Primary School" = `primary_school_name`,
+               "Distance to nearest Primary School (in km)" = `dist_to_nearest_primary_schools`,
+               "Primary Schools within 1km" = `primary_schools_1km`)
+    })
+    
+    output$sch_table <- renderDT({
+      datatable(data_table_sch(),
+                options = list(
+                  searching = FALSE, 
+                  paging = FALSE, 
+                  rownames = FALSE
+                ))
+    })
+    
+    data_table_supermarket <- reactive({
+      all_address %>%
+        filter(postal %in% input$addressM) %>%
+        select(`nearest_supermarket`, `dist_to_nearest_supermarket`, `supermarket_1km`) %>%
+        rename("Nearest Supermarket" = `nearest_supermarket`,
+               "Distance to nearest Supermarket (in km)" = `dist_to_nearest_supermarket`,
+               "Supermarkets within 1km" = `supermarket_1km`)
+    })
+    
+    output$supermarket_table <- renderDT({
+      datatable(data_table_supermarket(),
+                options = list(
+                  searching = FALSE, 
+                  paging = FALSE, 
+                  rownames = FALSE
+                ))
+    })
+    
+    data_table_hawker <- reactive({
+      all_address %>%
+        filter(postal %in% input$addressM) %>%
+        select(`name_of_centre`, `dist_to_nearest_hawkers`, `hawkers_1km`) %>%
+        rename("Nearest Hawker Centre" = `name_of_centre`,
+               "Distance to nearest Hawker Centre (in km)" = `dist_to_nearest_hawkers`,
+               "Hawker Centres within 1km" = `hawkers_1km`)
+    })
+    
+    output$hawkers_table <- renderDT({
+      datatable(data_table_hawker(),
+                options = list(
+                  searching = FALSE, 
+                  paging = FALSE, 
+                  rownames = FALSE
+                ))
+    })
+    
+    data_table_hospital <- reactive({
+      all_address %>%
+        filter(postal %in% input$addressM) %>%
+        select(`nearest_hospital`, `dist_to_nearest_hospital`, `hospitals_1km`) %>%
+        rename("Nearest Hospital" = `nearest_hospital`,
+               "Distance to nearest Hospital (in km)" = `dist_to_nearest_hospital`,
+               "Hospitals within 1km" = `hospitals_1km`)
+    })
+    
+    output$hospitals_table <- renderDT({
+      datatable(data_table_hospital(),
+                options = list(
+                  searching = FALSE, 
+                  paging = FALSE, 
+                  rownames = FALSE
+                ))
+    })
   
-
   
-  data_table_mrt <- reactive({
-    all_address %>%
-      filter(postal %in% input$addressM) %>%
-      select(`mrt_name`, `dist_to_nearest_mrt`, `mrt_1km`) %>%
-      rename("Nearest MRT Station" = `mrt_name`, 
-             "Distance to nearest mrt (in km)" = `dist_to_nearest_mrt`,
-             "MRT stations within 1km" = `mrt_1km`)
-  })
-  
-  output$mrt_table <- renderTable({data_table_mrt()})
-  
-  data_table_sch <- reactive({
-    all_address %>%
-      filter(postal %in% input$addressM) %>%
-      select(`primary_school_name`, `dist_to_nearest_primary_schools`, `primary_schools_1km`) %>%
-      rename("Nearest Primary School" = `primary_school_name`,
-             "Distance to nearest primary school (in km)" = `dist_to_nearest_primary_schools`, 
-             "Primary Schools within 1km" = `primary_schools_1km`)
-  })
-  
-  output$sch_table <- renderTable({data_table_sch()})
-  
-  data_table_supermarket <- reactive({
-    all_address %>%
-      filter(postal %in% input$addressM) %>%
-      select(`nearest_supermarket`, `dist_to_nearest_supermarket`, `supermarket_1km`) %>%
-      rename("Nearest Supermarket" = `nearest_supermarket`,
-             "Distance to nearest supermarket (in km)" = `dist_to_nearest_supermarket`, 
-             "Supermarkets within 1km" = `supermarket_1km`)
-  })
-  
-  output$supermarket_table <- renderTable({data_table_supermarket()})
-  
-  data_table_hawker <- reactive({
-    all_address %>%
-      filter(postal %in% input$addressM) %>%
-      select(`name_of_centre`, `dist_to_nearest_hawkers`, `hawkers_1km`) %>%
-      rename("Nearest Hawker Centre" = `name_of_centre`,
-             "Distance to nearest Hawker Centre (in km)" = `dist_to_nearest_hawkers`, 
-             "Hawker Centres within 1km" = `hawkers_1km`)
-  })
-  
-  output$hawkers_table <- renderTable({data_table_hawker()})
-  
-  data_table_hospital <- reactive({
-    all_address %>%
-      filter(postal %in% input$addressM) %>%
-      select(`nearest_hospital`, `dist_to_nearest_hospital`, `hospitals_1km`) %>%
-      rename("Nearest Hospital" = `nearest_hospital`,
-             "Distance to nearest Hospital (in km)" = `dist_to_nearest_hospital`, 
-             "Hospitals within 1km" = `hospitals_1km`)
-  })
-  
-  output$hospitals_table <- renderTable({data_table_hospital()})
-
   ########################## HOME TAB ######################################################
   output$homeOutput <- renderUI({
     tags$video(src = "hdb.gif.mp4", type = "video/mp4", autoplay = TRUE, loop = TRUE, controls = TRUE, style = "width:100%;")
