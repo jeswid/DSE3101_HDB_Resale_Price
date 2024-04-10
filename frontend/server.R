@@ -270,7 +270,15 @@ shinyServer(function(input, output, session) {
         ))
       } }
   })
+  
+  output$intro <- renderText({paste("How to use: Use the sliders to key in the desired house size and storeys, 
+                                    as well as key in the postal code, flat model and flat type to see 
+                                    the predicted price of your chosen HDB unit")})
   ##### FORECASTED PRICE TAB ###################################################################################
+  output$intro1 <- renderText({paste("How to use: Use the sliders to key in the desired house size and storeys, 
+                                    as well as key in the postal code, flat model and flat type to see 
+                                    the trend analysis of your chosen HDB unit")})
+  
   observeEvent(input$submitforecast, {
     req(input$addressF)
     filtered_row <- fittedforecast()  # Fetch the filtered dataset based on postal code
@@ -312,6 +320,8 @@ shinyServer(function(input, output, session) {
           lease_remained = final_row$remaining_lease
         }
       }
+      
+      
 
 
       # Construct user selection message

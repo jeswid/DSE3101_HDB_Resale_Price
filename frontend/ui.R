@@ -106,6 +106,7 @@ ui <- dashboardPage(
               fluidRow(
                 column(12, align = "center",
                        div(style = "width: 50%;", # Set the width of the container
+                           textOutput("intro"),
                            sliderInput("floor_area_sqm", "Desired Square Meter",
                                        min =  min_sqm, max = max_sqm,
                                        value = round((min_sqm + max_sqm) / 2), round = TRUE),              
@@ -125,6 +126,7 @@ ui <- dashboardPage(
       tabItem(tabName = "forecasted",
               fluidRow(
                 column(12, align = "center",
+                       textOutput("intro1"),
                        verbatimTextOutput("priceOutputF"),
                        plotlyOutput("forecastChart"),
                        sliderInput("floor_area_sqmF", "Desired Square Meter",
