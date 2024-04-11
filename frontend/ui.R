@@ -7,22 +7,7 @@ library(shinydashboard)
 min_sqm <- min(all_address_pred$floor_area_sqm, na.rm = TRUE)
 max_sqm <- max(all_address_pred$floor_area_sqm, na.rm = TRUE)
 
-# Create a reactive expression to filter the choices of postal codes based on the selected town
-filtered_postal_codes <- reactive({
-  if (!is.null(input$town)) {
-    if(input$town == 'ALL TOWNS') {
-      all_address %>%
-        pull(postal) %>%
-        unique()
-    } else {
-      all_address %>%
-        filter(town == input$town) %>%
-        pull(postal) %>%
-        unique()
-    }} else {
-      NULL
-    }
-})
+
 
 
 ui <- dashboardPage(
@@ -105,6 +90,7 @@ ui <- dashboardPage(
       tabItem(tabName = "geospatial",
               fluidRow(
                 column(9,
+                       textOutput("intro2"),
                        verbatimTextOutput("geoSelectionOutput"),
                        leafletOutput("map", width = "100%", height = "600px"), 
                        DTOutput("mrt_table"),
@@ -116,7 +102,7 @@ ui <- dashboardPage(
                 column(3,
                        div(id = "sidebar", class = "well",
                            # Add a dropdown selection box for towns
-                           selectInput("town", "Type or Select Town", choices = unique(c("ALL TOWNS", all_address$town))),
+                           selectInput("town", "Type or Select Town", choices = unique(c("ALL TOWNS", all_address$town)), selected = "ALL TOWNS"),
                            selectInput("addressM","Type or Select Postal Code", selected = "", choices = sort(unique(all_address$postal), decreasing = TRUE)),
                            actionButton("submitmap", "Click to zoom 🔎", class = "btn-primary")
                        )
