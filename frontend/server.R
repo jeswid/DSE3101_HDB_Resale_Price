@@ -29,12 +29,14 @@ shinyServer(function(input, output, session) {
   filtered_postal_codes <- reactive({
     if (!is.null(input$town)) {
       if(input$town == 'ALL TOWNS') {
-        all_address %>%
+        all_address %>% 
+          arrange(desc(postal)) %>%
           pull(postal) %>%
           unique()
       } else {
         all_address %>%
           filter(town == input$town) %>%
+          arrange(desc(postal)) %>%
           pull(postal) %>%
           unique()
       }} else {
@@ -72,24 +74,6 @@ shinyServer(function(input, output, session) {
       addTiles() %>%
       addAwesomeMarkers(~lng, ~lat, icon = icons, popup = ~INFO, label = ~INFO)
   })
-  
-  # Create a reactive expression to filter the choices of postal codes based on the selected town
-  filtered_postal_codes <- reactive({
-    if (!is.null(input$town)) {
-      if(input$town == 'ALL TOWNS') {
-        all_address %>%
-          pull(postal) %>%
-          unique()
-      } else {
-        all_address %>%
-          filter(town == input$town) %>%
-          pull(postal) %>%
-          unique()
-      }} else {
-        NULL
-      }
-  })
-  
   
   # Update the choices of postal codes based on the selected town
   observe({
