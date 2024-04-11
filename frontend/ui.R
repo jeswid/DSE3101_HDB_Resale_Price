@@ -83,10 +83,19 @@ ui <- dashboardPage(
     tabItems(
       tabItem(tabName = "home",
               fluidRow(
-                column(12,
-                       uiOutput("homeOutput"))
+                div(
+                  style = "display: flex; flex-wrap: wrap;",
+                  div(
+                    style = "flex: 1; padding-left: 20px;", # Add padding to the left side of the panel
+                    uiOutput("homeOutput")
+                  ),
+                  div(
+                    style = "flex: 1; display: flex; justify-content: center; align-items: center;",
+                    tags$img(src = "hdb_5.png", style = "max-width: 100%; height: auto;")
+                  )
+                )
               )
-      ),
+      ) ,
       tabItem(tabName = "geospatial",
               fluidRow(
                 column(9,

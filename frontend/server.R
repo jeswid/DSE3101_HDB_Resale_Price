@@ -199,7 +199,7 @@ shinyServer(function(input, output, session) {
   
   ########################## HOME TAB ######################################################
   output$homeOutput <- renderUI({
-    tags$video(src = "hdb.gif.mp4", type = "video/mp4", autoplay = TRUE, loop = TRUE, controls = TRUE, style = "width:100%;")
+    tags$img(src = "hdb_2.jpg", style = "width:100%;")
     HTML(paste0('
   <div style="font-size: 15px; line-height: 1.6;">
     <h2>Introduction</h2>
