@@ -7,6 +7,24 @@ library(shinydashboard)
 min_sqm <- min(all_address_pred$floor_area_sqm, na.rm = TRUE)
 max_sqm <- max(all_address_pred$floor_area_sqm, na.rm = TRUE)
 
+# Create a reactive expression to filter the choices of postal codes based on the selected town
+filtered_postal_codes <- reactive({
+  if (!is.null(input$town)) {
+    if(input$town == 'ALL TOWNS') {
+      all_address %>%
+        pull(postal) %>%
+        unique()
+    } else {
+      all_address %>%
+        filter(town == input$town) %>%
+        pull(postal) %>%
+        unique()
+    }} else {
+      NULL
+    }
+})
+
+
 ui <- dashboardPage(
   dashboardHeader(title = "HDB PROJECT"),
   dashboardSidebar(
@@ -47,11 +65,12 @@ ui <- dashboardPage(
         }
       "))
     ),
+    
     sidebarMenu(
       menuItem("Home", tabName = "home", icon = icon("home")),
       menuItem("Geospatial Analysis", tabName = "geospatial", icon = icon("map")),
       menuItem("Predicted Price", tabName = "predicted", icon = icon("dollar")),
-      menuItem("Price Trend", tabName = "forecasted", icon = icon("chart-line"))
+      menuItem("Trend Analysis", tabName = "forecasted", icon = icon("chart-line"))
     )
   ),
   dashboardBody(
@@ -80,25 +99,24 @@ ui <- dashboardPage(
       tabItem(tabName = "home",
               fluidRow(
                 column(12,
-                       uiOutput("homeOutput")),
-                column(width = 7,
-                       img(src="hdb.JPG", style="display: block; margin-left: auto; margin-right: auto; width: 100%;")
+                       uiOutput("homeOutput"))
               )
-      )),
+      ),
       tabItem(tabName = "geospatial",
               fluidRow(
                 column(9,
-                       textOutput("intro2"),
                        verbatimTextOutput("geoSelectionOutput"),
                        leafletOutput("map", width = "100%", height = "600px"), 
                        DTOutput("mrt_table"),
                        DTOutput("sch_table"),
-                       DTOutput("supermarket_table"),
                        DTOutput("hawkers_table"),
-                       DTOutput("hospitals_table")
+                       DTOutput("hospitals_table"),
+                       DTOutput("supermarket_table")
                 ),
                 column(3,
                        div(id = "sidebar", class = "well",
+                           # Add a dropdown selection box for towns
+                           selectInput("town", "Type or Select Town", choices = unique(c("ALL TOWNS", all_address$town))),
                            selectInput("addressM","Type or Select Postal Code", selected = "", choices = sort(unique(all_address$postal), decreasing = TRUE)),
                            actionButton("submitmap", "Click to zoom 🔎", class = "btn-primary")
                        )
@@ -149,5 +167,4 @@ ui <- dashboardPage(
       )
     )
   )
-)
-
+) 
