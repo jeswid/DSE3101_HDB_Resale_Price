@@ -108,10 +108,10 @@ ui <- dashboardPage(
                        verbatimTextOutput("geoSelectionOutput"),
                        leafletOutput("map", width = "100%", height = "600px"), 
                        DTOutput("mrt_table"),
-                       DTOutput("sch_table"),
                        DTOutput("hawkers_table"),
-                       DTOutput("hospitals_table"),
-                       DTOutput("supermarket_table")
+                       DTOutput("sch_table"),
+                       DTOutput("supermarket_table"),
+                       DTOutput("hospitals_table")
                 ),
                 column(3,
                        div(id = "sidebar", class = "well",
