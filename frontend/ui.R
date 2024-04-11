@@ -84,18 +84,20 @@ ui <- dashboardPage(
       tabItem(tabName = "home",
               fluidRow(
                 div(
-                  style = "display: flex; flex-wrap: wrap;",
+                  style = "display: flex; flex-wrap: wrap; justify-content: center; align-items: center; height: 100%;", # Center content vertically and set height of container
                   div(
-                    style = "flex: 1; padding-left: 20px;", # Add padding to the left side of the panel
+                    style = "padding-left: 20px; padding-right: 20px; flex: 1; align-self: flex-start;", # Add padding to both sides of the paragraph
                     uiOutput("homeOutput")
                   ),
                   div(
-                    style = "flex: 1; display: flex; justify-content: center; align-items: center;",
-                    tags$img(src = "hdb_5.png", style = "max-width: 100%; height: auto;")
+                    style = "padding-left: 20px; flex: 1; display: flex; justify-content: center; align-items: center;", # Add padding to the left side of the picture and center it vertically
+                    tags$img(src = "hdb_4.png", style = "max-width: 100%; height: auto;"),
                   )
                 )
               )
-      ) ,
+      ),
+      
+          
       tabItem(tabName = "geospatial",
               fluidRow(
                 column(9,
