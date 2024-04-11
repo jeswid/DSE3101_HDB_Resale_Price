@@ -100,11 +100,13 @@ shinyServer(function(input, output, session) {
   
   output$mrt_table <- renderDT({
     datatable(data_table_mrt(),
+                rownames = FALSE,
               options = list(
-                searching = FALSE, 
-                paging = FALSE, 
-                rownames = FALSE
-              ))
+                lengthMenu = FALSE,
+                searching = FALSE,
+                paging = FALSE
+              )
+              )
   })
   
   data_table_sch <- reactive({
@@ -118,11 +120,13 @@ shinyServer(function(input, output, session) {
   
   output$sch_table <- renderDT({
     datatable(data_table_sch(),
+                rownames = FALSE,
               options = list(
-                searching = FALSE, 
-                paging = FALSE, 
-                rownames = FALSE
-              ))
+                lengthMenu = FALSE,
+                searching = FALSE,
+                paging = FALSE
+              )
+              )
   })
   
   
@@ -137,10 +141,11 @@ shinyServer(function(input, output, session) {
   
   output$hawkers_table <- renderDT({
     datatable(data_table_hawker(),
+                rownames = FALSE,
               options = list(
-                searching = FALSE, 
-                paging = FALSE, 
-                rownames = FALSE
+                lengthMenu = FALSE,
+                searching = FALSE,
+                paging = FALSE
               ))
   })
   
@@ -155,11 +160,13 @@ shinyServer(function(input, output, session) {
   
   output$hospitals_table <- renderDT({
     datatable(data_table_hospital(),
+                rownames = FALSE,
               options = list(
-                searching = FALSE, 
-                paging = FALSE, 
-                rownames = FALSE
-              ))
+                lengthMenu = FALSE,
+                searching = FALSE,
+                paging = FALSE
+              )
+              )
   })
   
   data_table_supermarket <- reactive({
@@ -173,13 +180,15 @@ shinyServer(function(input, output, session) {
   
   output$supermarket_table <- renderDT({
     datatable(data_table_supermarket(),
-              options = list(
-                searching = FALSE, 
-                paging = FALSE, 
                 rownames = FALSE, 
-                server = FALSE
+              options = list(
+                lengthMenu = FALSE,
+                searching = FALSE,
+                paging = FALSE
+              )
                 
-              ))
+                
+              )
   })
   
   
