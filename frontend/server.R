@@ -313,8 +313,8 @@ shinyServer(function(input, output, session) {
   output$intro1 <- renderText({paste("How to use: Use the sliders to key in the desired house size and storeys, 
                                     as well as key in the HDB postal code, flat model and flat type to see 
                                     the trend in the price of your chosen HDB unit. Hover your mouse above the specific points
-                                     to see the exact prices at specific dates. Zoom in on the graph to observe specific
-                                     details in the HDB price trends.")})
+                                     to see the exact prices and growth rates at specific dates. Zoom in on the graph to observe specific
+                                     details in the HDB price trends and growth rates.")})
   
   observeEvent(input$submitforecast, {
     req(input$addressF)
