@@ -13,8 +13,7 @@ library('lubridate')
 library('anytime')
 library('knitr')
 library('kableExtra')
-
-
+library('stats')
 
 shinyServer(function(input, output, session) {
   shinyjs::addClass(selector = "body", class = "sidebar-collapse")
@@ -105,13 +104,13 @@ shinyServer(function(input, output, session) {
   
   output$mrt_table <- renderDT({
     datatable(data_table_mrt(),
-                rownames = FALSE,
+              rownames = FALSE,
               options = list(
                 lengthMenu = FALSE,
                 searching = FALSE,
                 paging = FALSE
               )
-              )
+    )
   })
   
   data_table_sch <- reactive({
@@ -125,13 +124,13 @@ shinyServer(function(input, output, session) {
   
   output$sch_table <- renderDT({
     datatable(data_table_sch(),
-                rownames = FALSE,
+              rownames = FALSE,
               options = list(
                 lengthMenu = FALSE,
                 searching = FALSE,
                 paging = FALSE
               )
-              )
+    )
   })
   
   
@@ -146,7 +145,7 @@ shinyServer(function(input, output, session) {
   
   output$hawkers_table <- renderDT({
     datatable(data_table_hawker(),
-                rownames = FALSE,
+              rownames = FALSE,
               options = list(
                 lengthMenu = FALSE,
                 searching = FALSE,
@@ -165,13 +164,13 @@ shinyServer(function(input, output, session) {
   
   output$hospitals_table <- renderDT({
     datatable(data_table_hospital(),
-                rownames = FALSE,
+              rownames = FALSE,
               options = list(
                 lengthMenu = FALSE,
                 searching = FALSE,
                 paging = FALSE
               )
-              )
+    )
   })
   
   data_table_supermarket <- reactive({
@@ -185,15 +184,15 @@ shinyServer(function(input, output, session) {
   
   output$supermarket_table <- renderDT({
     datatable(data_table_supermarket(),
-                rownames = FALSE, 
+              rownames = FALSE, 
               options = list(
                 lengthMenu = FALSE,
                 searching = FALSE,
                 paging = FALSE
               )
-                
-                
-              )
+              
+              
+    )
   })
   
   
@@ -250,10 +249,6 @@ shinyServer(function(input, output, session) {
       return(data.frame(Street = "Street name not found"))
     }
   })
-  
-  
-  
-  
   
   ###################PREDICTED PRICE TAB #############################################################  
   observeEvent(input$submitprice, {
@@ -317,7 +312,9 @@ shinyServer(function(input, output, session) {
   ##### FORECASTED PRICE TAB ###################################################################################
   output$intro1 <- renderText({paste("How to use: Use the sliders to key in the desired house size and storeys, 
                                     as well as key in the HDB postal code, flat model and flat type to see 
-                                    the trend in the price of your chosen HDB unit")})
+                                    the trend in the price of your chosen HDB unit. Hover your mouse above the specific points
+                                     to see the exact prices at specific dates. Zoom in on the graph to observe specific
+                                     details in the HDB price trends.")})
   
   observeEvent(input$submitforecast, {
     req(input$addressF)
@@ -382,14 +379,52 @@ shinyServer(function(input, output, session) {
                                            ifelse(round((forecasted_prices$year - floor(forecasted_prices$year)) * 12) == 0, 
                                                   (floor(forecasted_prices$year)-1), floor(forecasted_prices$year)),sep = "-"))
         
+        
+        
+        # Sort the dataset by date if it's not already sorted
+        forecasted_prices <- forecasted_prices[order(forecasted_prices$date), ]
+        
+        years_req <- c(sum(2017+(1/12)), sum(2018+(1/12)), sum(2019+(1/12)), sum(2020+(1/12)), sum(2021+(1/12)), 
+                       sum(2022+(1/12)), sum(2023+(1/12)), sum(2024+(1/12)))
+        
+        calculate_year_on_year_growth <- function(years, prices) {
+          growth_rates <- numeric(length(years))
+          
+          for (i in 1:length(years)) {
+            if (years[i] == sum(2017+(1/12))) {
+              growth_rates[i] <- 0
+            } else {
+              growth_rates[i] <- ((prices[i] - prices[i-1]) / prices[i-1]) * 100
+            }
+          }
+          
+          return(growth_rates)
+        }
+        
+        
+        final_prices <- forecasted_prices %>% filter(year %in% years_req) %>% pull(predicted_price)
+        
+        # Calculate the year-on-year growth rate for each year
+        growth_rates <- calculate_year_on_year_growth(years_req, final_prices)
+        
+        
+        # Calculate the average growth rate
+        avg_growth <- mean(growth_rates, na.rm = TRUE)
+        
+        #for trend line
+        m <- loess(predicted_price~as.numeric(date),data = forecasted_prices)
+        
         # Generate the line chart
-        # Create plotly graph
-        p <- plot_ly(data = forecasted_prices, x = ~date, y = ~predicted_price, type = 'scatter', mode = 'lines',
+        # Create plotly graph with a trendline on the price changes over the years, label by average growth rate
+        p <- plot_ly(data = forecasted_prices, x = ~date, y = ~predicted_price, type = 'scatter', mode = 'lines+markers',
                      text = ~paste("Date: ", date, paste0("<br>", "Price: $", round(predicted_price, 2))),
-                     hoverinfo = 'text') %>%
+                     hoverinfo = 'text', name = "Monthly Price") %>%
           layout(title = "Trend of HDB Prices",
                  xaxis = list(title = "Year"),
-                 yaxis = list(title = "Price of HDB flat", tickformat = "$"))
+                 yaxis = list(title = "Price of HDB", tickformat = "$")) %>%
+          add_lines(x=~date, y=predict(m), name="General Trend", hoverinfo = 'none') %>%
+          add_annotations(x = '2023-01-01', y = 650000, text = paste0("Average 
+                           Year-On-Year Price Growth Rate: ", round(avg_growth, 2), "%"), showarrow = FALSE)
         
         p
         
