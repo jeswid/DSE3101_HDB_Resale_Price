@@ -90,8 +90,8 @@ ui <- dashboardPage(
                     uiOutput("homeOutput")
                   ),
                   div(
-                    style = "padding-left: 20px; flex: 1; display: flex; justify-content: center; align-items: center;", # Add padding to the left side of the picture and center it vertically
-                    tags$img(src = "hdb_4.png", style = "max-width: 100%; height: auto;"),
+                    style = "flex: 1; display: flex; justify-content: center; align-items: center;", # Add padding to the left side of the picture and center it vertically
+                    tags$img(src = "hdb_5.png", style = "max-width: 100%; height: auto;"),
                   )
                 )
               )
@@ -132,7 +132,7 @@ ui <- dashboardPage(
                            selectInput("flat_modelM", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
                                                                                 'New Generation', 'Maisonette', 'Apartment', 'Simplified',
                                                                                 'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
-                                                                                '2-room', 'Executive Maisonette', 'Type S1S2'), 
+                                                                                '2-room', 'Type S2', 'Type S1'), 
                                        selected = "Model A"),
                            selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
                            sliderInput("storey","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
@@ -154,7 +154,7 @@ ui <- dashboardPage(
                        selectInput("flat_modelMF", "Flat Model", choices = c('Model A', 'Improved', 'Premium Apartment', 'Standard',
                                                                              'New Generation', 'Maisonette', 'Apartment', 'Simplified',
                                                                              'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
-                                                                             '2-room', 'Executive Maisonette', 'Type S1S2'), 
+                                                                             '2-room', 'Type S2', 'Type S1'), 
                                    selected = "Model A"),
                        selectInput("flat_typeF", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
                        sliderInput("storeyF","Desired Level",min = 1, max = 50,value = 1,round = TRUE),

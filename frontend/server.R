@@ -407,6 +407,7 @@ shinyServer(function(input, output, session) {
         # Calculate the year-on-year growth rate for each year
         growth_rates <- calculate_year_on_year_growth(years_req, final_prices)
         
+        growth_df <- data.frame ( year = years_req, price = final_prices)
         
         # Calculate the average growth rate
         avg_growth <- mean(growth_rates, na.rm = TRUE)
@@ -426,7 +427,15 @@ shinyServer(function(input, output, session) {
           add_annotations(x = '2023-01-01', y = 650000, text = paste0("Average 
                            Year-On-Year Price Growth Rate: ", round(avg_growth, 2), "%"), showarrow = FALSE)
         
-        p
+        q <- plot_ly(data = growth_df, x = floor(years_req), y = growth_rates/100, type = 'bar', name = "Growth Rate", marker = list(color = ifelse(growth_rates < 0, "pink", "lightgreen"))) %>%
+          layout(title = "HDB Price Trends & Annual Growth Rates",
+                 xaxis = list(title = "Year"),
+                 yaxis = list(title = "Growth Rate", tickformat = "%"))
+        
+        
+        final <- subplot(p, q, nrows = 2)
+        
+        final
         
       })
       
