@@ -134,7 +134,7 @@ ui <- dashboardPage(
                                                                                 'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
                                                                                 '2-room', 'Type S2', 'Type S1'), 
                                        selected = "Model A"),
-                           selectInput("flat_type", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
+                           selectInput("flat_type", "Flat Type", choices = c('1 ROOM','2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE', 'MULTI-GENERATION'), selected = "4 ROOM"),
                            sliderInput("storey","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
                            actionButton("submitprice", "Submit HDB 🔎", class = "btn-primary"),
                            textOutput("priceOutput")
@@ -156,7 +156,7 @@ ui <- dashboardPage(
                                                                              'Model A2', 'DBSS', 'Terrace', 'Adjoined flat', 'Multi Generation',
                                                                              '2-room', 'Type S2', 'Type S1'), 
                                    selected = "Model A"),
-                       selectInput("flat_typeF", "Flat Type", choices = c('2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE'), selected = "4 ROOM"),
+                       selectInput("flat_typeF", "Flat Type", choices = c('1 ROOM','2 ROOM', '3 ROOM', '4 ROOM', '5 ROOM', 'EXECUTIVE', 'MULTI-GENERATION'), selected = "4 ROOM"),
                        sliderInput("storeyF","Desired Level",min = 1, max = 50,value = 1,round = TRUE),
                        actionButton("submitforecast", "Submit HDB 🔎", class = "btn-primary")
                 )
