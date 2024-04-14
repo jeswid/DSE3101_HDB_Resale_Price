@@ -97,6 +97,7 @@ shinyServer(function(input, output, session) {
     all_address %>%
       filter(postal %in% input$addressM) %>%
       select(`mrt_name`, `dist_to_nearest_mrt`, `mrt_1km`) %>%
+      mutate(`dist_to_nearest_mrt` = round(`dist_to_nearest_mrt`,2)) %>%
       rename("Nearest MRT Station" = `mrt_name`,
              "Distance to nearest MRT (in km)" = `dist_to_nearest_mrt`,
              "MRT stations within 1km" = `mrt_1km`)
@@ -117,6 +118,7 @@ shinyServer(function(input, output, session) {
     all_address %>%
       filter(postal %in% input$addressM) %>%
       select(`primary_school_name`, `dist_to_nearest_primary_schools`, `primary_schools_1km`) %>%
+      mutate(`dist_to_nearest_primary_schools` = round(`dist_to_nearest_primary_schools`,2)) %>%
       rename("Nearest Primary School" = `primary_school_name`,
              "Distance to nearest Primary School (in km)" = `dist_to_nearest_primary_schools`,
              "Primary Schools within 1km" = `primary_schools_1km`)
@@ -138,6 +140,7 @@ shinyServer(function(input, output, session) {
     all_address %>%
       filter(postal %in% input$addressM) %>%
       select(`name_of_centre`, `dist_to_nearest_hawkers`, `hawkers_1km`) %>%
+      mutate(`dist_to_nearest_hawkers` = round(`dist_to_nearest_hawkers`,2)) %>%
       rename("Nearest Hawker Centre" = `name_of_centre`,
              "Distance to nearest Hawker Centre (in km)" = `dist_to_nearest_hawkers`,
              "Hawker Centres within 1km" = `hawkers_1km`)
@@ -157,6 +160,7 @@ shinyServer(function(input, output, session) {
     all_address %>%
       filter(postal %in% input$addressM) %>%
       select(`nearest_hospital`, `dist_to_nearest_hospital`, `hospitals_1km`) %>%
+      mutate(`dist_to_nearest_hospital` = round(`dist_to_nearest_hospital`,2)) %>%
       rename("Nearest Hospital" = `nearest_hospital`,
              "Distance to nearest Hospital (in km)" = `dist_to_nearest_hospital`,
              "Hospitals within 1km" = `hospitals_1km`)
@@ -177,6 +181,7 @@ shinyServer(function(input, output, session) {
     all_address %>%
       filter(postal %in% input$addressM) %>%
       select(`nearest_supermarket`, `dist_to_nearest_supermarket`, `supermarket_1km`) %>%
+      mutate(`dist_to_nearest_supermarket` = round(`dist_to_nearest_supermarket`,2)) %>%
       rename("Nearest Supermarket" = `nearest_supermarket`,
              "Distance to nearest Supermarket (in km)" = `dist_to_nearest_supermarket`,
              "Supermarkets within 1km" = `supermarket_1km`)
