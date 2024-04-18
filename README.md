@@ -16,9 +16,11 @@ Traditionally, house prices have been thought to reflect their proximity to urba
 Our aim is to resolve these issues by providing buyers with crucial knowledge, enabling them to make informed decisions when purchasing their ideal home. This, in turn, reduces their reliance on external intermediaries like property agents.
 
 ### Guide to the GitHub Repository
-Firstly to ensure our codes would work, please either clone the repository or download this as a zip file. <br>
+To ensure our codes would work, please either clone the repository or download this as a zip file. <br>
+
+
 We split our repository into two folders: <br>
-The backend houses the code for the pre-processing of data, exploratory data analysis and training of the machine learning models that we considered.
+The backend houses the code for the pre-processing of data, exploratory data analysis and training of the machine learning models that we considered. <br>
 The frontend houses the code for the visualization and the design of our app, separated into the UI and server files. 
 Before diving into our two folders, ensure that you install these packages onto our local device:
 ```R
@@ -38,7 +40,7 @@ You may follow the steps that we took: <br>
 4) To see our benchmark ordinary least squares regression model and the machine learning models that we considered, you may run the codes in [ML.Rmd](https://github.com/brandono7/DSE3101_HDB_Resale_Price/blob/main/backend/ML.Rmd).
 
 ### Guide to the Frontend Folder
-To launch our website manually and see our frontend codes, you may either run the [ui.R](https://github.com/brandono7/DSE3101_HDB_Resale_Price/blob/main/frontend/ui.R) or [server.R](https://github.com/brandono7/DSE3101_HDB_Resale_Price/blob/main/frontend/server.R) and launch the app. 
+To launch our website manually, you may either run the [ui.R](https://github.com/brandono7/DSE3101_HDB_Resale_Price/blob/main/frontend/ui.R) or [server.R](https://github.com/brandono7/DSE3101_HDB_Resale_Price/blob/main/frontend/server.R) and launch the app. The [global_settings.R](https://github.com/brandono7/DSE3101_HDB_Resale_Price/blob/main/frontend/global_settings.R) contains the global variables and functions that we need for the functionality of the app.
 
 Authors: Brandon, Jessica, Li Xuan, Wan Ting <br>
 Special Thanks to Prof Huang and Prof Denis for their guidance. <br>
