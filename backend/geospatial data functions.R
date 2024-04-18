@@ -434,14 +434,8 @@ hdb_blocks = hdb_blocks %>%
 hdb_blocks = hdb_blocks %>% 
   left_join(hdb_town, by = c("street" = "address")) %>%
   unique()
-# write.csv(hdb_blocks, "backend/processed_data/unique_hdb_block_details_w_schools_mrt_name.csv") 
-# Note: csv is for frontend usage
-# saveRDS(hdb_blocks, "backend/processed_data/unique_hdb_block_details_w_schools_mrt_name.Rds")
 
-# read the hdb_blocks w mrt and pri sch names data
-hdb_blocks_new = read.csv("backend/processed_data/unique_hdb_block_details_w_schools_mrt_name.csv") %>% select(-1)
-
-hdb_blocks_w_schools_mrt_hawkers_name = hdb_blocks_new %>%
+hdb_blocks_w_schools_mrt_hawkers_name = hdb_blocks %>%
   mutate(postal_code_nearest_hospital = substr(nearest_hospital,
                                           nchar(nearest_hospital) - 5, 
                                           nchar(nearest_hospital))) %>%
@@ -451,6 +445,7 @@ hdb_blocks_w_schools_mrt_hawkers_name = hdb_blocks_new %>%
   left_join(hawkers, by = c("postal_code_nearest_hawkers" = "postal"))
 
 # saveRDS(hdb_blocks_w_schools_mrt_hawkers_name, "hdb_blocks_w_schools_mrt_hawkers_name.Rds")
+# Note: csv is for frontend usage
 # write.csv(hdb_blocks_w_schools_mrt_hawkers_name, "hdb_blocks_w_schools_mrt_hawkers_name.csv")
 ##########################################################################################
 # Test Example of ONEMAP API Call
