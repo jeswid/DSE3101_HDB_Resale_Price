@@ -81,7 +81,7 @@ lat_long_postal_xy = lat_long_postal_xy %>%
   filter(lat <= 1.299641 | lat >= 1.299642) %>% # Remove the default values 
   na.omit()
 
-# Replace irregular postal code "data "NIL" with postal code in reality
+# Replace irregular postal code data "NIL" with postal code in reality
 lat_long_postal_xy[1280,]$postal = as.character("680216")
 lat_long_postal_xy[7151,]$postal = as.character("680215")
 
