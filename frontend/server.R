@@ -15,9 +15,9 @@ library('knitr')
 library('kableExtra')
 library('stats')
 
+source("global_settings.R")
 shinyServer(function(input, output, session) {
   shinyjs::addClass(selector = "body", class = "sidebar-collapse")
-  
   ############## MAP TAB ##################################################################
   output$intro2 <- renderText({paste("How to use: Type or Select HDB postal code. 
                                      Or if you just want to explore the HDB blocks in a town, 

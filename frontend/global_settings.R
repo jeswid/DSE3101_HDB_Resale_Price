@@ -1,7 +1,3 @@
-# library('rgdal')
-# library('spdplyr')
-
-
 library('parsnip')
 library('leaflet')
 library("xgboost")
@@ -20,23 +16,25 @@ library(sf)
 library("plotly")
 library(stringr)
 
+# Note that this file cannot be run independently. If you need to run this file, please adjust the file directory 
+# to start from the frontend folder.
 ############# MAP DATA ###############
-SG_map = readRDS("frontend/data/SG_map.rds")
-all_address = read.csv("frontend/data/hdb_blocks_w_schools_mrt_hawkers_name.csv") %>%
+SG_map = readRDS("data/SG_map.rds")
+all_address = read.csv("data/hdb_blocks_w_schools_mrt_hawkers_name.csv") %>%
   rename(lng = long) %>% mutate(name_of_centre = str_to_upper(name_of_centre), primary_school_name = str_to_upper(primary_school_name))
-amenities = read.csv("frontend/data/lat_long_for_visualisation.csv")
-hawker_centres = read.csv("frontend/data/hawker_centres_geocode.csv")
-hospitals = read.csv("frontend/data/hospitals_geocode.csv")
-mrt = read.csv("frontend/data/hospitals_geocode.csv")
-pri_schs = read.csv("frontend/data/primary_schools_geocode.csv")
-supermarkets = read.csv("frontend/data/supermarkets_geocode.csv")
+amenities = read.csv("data/lat_long_for_visualisation.csv")
+hawker_centres = read.csv("data/hawker_centres_geocode.csv")
+hospitals = read.csv("data/hospitals_geocode.csv")
+mrt = read.csv("data/hospitals_geocode.csv")
+pri_schs = read.csv("data/primary_schools_geocode.csv")
+supermarkets = read.csv("data/supermarkets_geocode.csv")
 
 
 ############# PREDICTION DATA ###############
-laty = readRDS("frontend/data/lat_long_for_prediction.Rds")
-all_address_pred = readRDS("frontend/data/hdb_merged_no_transform.Rds")
-sample_df = readRDS("frontend/data/sample_obs_inputs.Rds")
-model = readRDS("frontend/xgb.rds")
+laty = readRDS("data/lat_long_for_prediction.Rds")
+all_address_pred = readRDS("data/hdb_merged_no_transform.Rds")
+sample_df = readRDS("data/sample_obs_inputs.Rds")
+model = readRDS("xgb.rds")
 
 ############# FUNCTIONS REQUIRED ###############
 # Get the names of the categorical columns
@@ -80,17 +78,6 @@ one_hot_encoding <- function(data, column_names) {
   }
   return(data)
 }
-
-fittedprediction <- reactive({
-  completerow <- laty %>%
-    filter(postal == input$address)
-  
-  if(nrow(completerow) > 0) {
-    return(completerow)
-  } else {
-    return(data.frame(Street = "Street name not found"))
-  }
-})
 
 generate_month_dummies <- function() {
   # Get the current year and month

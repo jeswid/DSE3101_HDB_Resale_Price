@@ -4,6 +4,7 @@ library(shinyjs)
 library(plotly)
 library(shinydashboard)
 
+source("global_settings.R")
 min_sqm <- min(all_address_pred$floor_area_sqm, na.rm = TRUE)
 max_sqm <- max(all_address_pred$floor_area_sqm, na.rm = TRUE)
 
