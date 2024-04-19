@@ -16,7 +16,7 @@ Traditionally, house prices have been thought to reflect their proximity to urba
 Our aim is to resolve these issues by providing buyers with crucial knowledge, enabling them to make informed decisions when purchasing their ideal home. This, in turn, reduces their reliance on external intermediaries like property agents.
 
 ### Guide to the GitHub Repository
-To ensure our codes would work, please either clone the repository or download this as a zip file. <br>
+To ensure our codes work, please either clone the repository or download this repository as a zip file. <br>
 
 
 We split our repository into two folders: <br>
@@ -34,9 +34,9 @@ You may find the data that we sourced for our datasets from the raw dataset. Add
 To replicate how we generated the datasets and eventually build our final machine learning model. 
 
 You may follow the steps that we took: <br>
-1) To generate the geospatial data of HDB flats and amenities, you may run the codes in [geospatial_data_functions.R](https://github.com/brandono7/DSE3101_HDB_Resale_Price/blob/main/backend/geospatial%20data%20functions.R). <br>
-2) To conduct further cleaning on our HDB transactions data as well as one hot encoding on categorical variables, you may run the codes in [data_prepocessing.R](https://github.com/brandono7/DSE3101_HDB_Resale_Price/blob/main/backend/Data%20Pre-Processing.R). <br>
-3) To explore the data and visualise data distributions of our variables, you may run the codes in [Exploratory_Data_Analysis.Rmd](https://github.com/brandono7/DSE3101_HDB_Resale_Price/blob/main/backend/Exploratory%20Data%20Analysis.Rmd). <br>
+1) To generate the geospatial data of HDB flats and amenities, you may run the codes in [geospatial data functions.R](https://github.com/brandono7/DSE3101_HDB_Resale_Price/blob/main/backend/geospatial%20data%20functions.R). <br>
+2) To conduct further cleaning on our HDB transactions data as well as one hot encoding on categorical variables, you may run the codes in [Data Pre-Processing.R](https://github.com/brandono7/DSE3101_HDB_Resale_Price/blob/main/backend/Data%20Pre-Processing.R). <br>
+3) To explore the data and visualise data distributions of our variables, you may run the codes in [Exploratory Data Analysis.Rmd](https://github.com/brandono7/DSE3101_HDB_Resale_Price/blob/main/backend/Exploratory%20Data%20Analysis.Rmd). <br>
 4) To see our benchmark ordinary least squares regression model and the machine learning models that we considered, you may run the codes in [ML.Rmd](https://github.com/brandono7/DSE3101_HDB_Resale_Price/blob/main/backend/ML.Rmd).
 
 ### Guide to the Frontend Folder
